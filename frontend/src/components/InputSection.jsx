@@ -38,7 +38,9 @@ const InputSection = ({ onTextSubmit, isProcessing, currentStep }) => {
   if (currentStep > 2) return null
 
   return (
-    <div className="bg-white border-radius-16 shadow-lg p-8 text-center">
+    <div className={`bg-white border-radius-16 shadow-lg p-8 text-center transition-all duration-300 ${
+      isProcessing ? 'animate-pulse-refined' : ''
+    }`}>
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
           Input Your Data

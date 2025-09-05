@@ -19,6 +19,16 @@ from core.combinator import ConceptCombinator
 from utils.ollama_client import ollama_client
 from utils.prompt_loader import prompt_loader
 
+# Import WebSocket helpers - handle gracefully if not available
+try:
+    from api.websocket import send_pipeline_update, send_pipeline_error, send_pipeline_complete
+    WEBSOCKET_AVAILABLE = True
+except ImportError:
+    WEBSOCKET_AVAILABLE = False
+    async def send_pipeline_update(*args, **kwargs): pass
+    async def send_pipeline_error(*args, **kwargs): pass
+    async def send_pipeline_complete(*args, **kwargs): pass
+
 logger = logging.getLogger(__name__)
 
 class PipelineStage(Enum):
@@ -58,7 +68,8 @@ class PipelineOrchestrator:
                                format_type: str = "qa",
                                samples_per_combination: int = 3,
                                max_total_samples: int = 10000,
-                               progress_callback: Optional[Callable] = None) -> Dict[str, Any]:
+                               progress_callback: Optional[Callable] = None,
+                               websocket_task_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Execute the complete 8-step pipeline
         
@@ -90,27 +101,27 @@ class PipelineOrchestrator:
             }
             
             # Step 1: Input Processing
-            await self._update_stage(PipelineStage.INPUT_PROCESSING, progress_callback)
+            await self._update_stage(PipelineStage.INPUT_PROCESSING, progress_callback, websocket_task_id)
             processed_input = await self._step_1_input_processing(input_text)
             
             # Step 2: Concept Extraction
-            await self._update_stage(PipelineStage.CONCEPT_EXTRACTION, progress_callback)
+            await self._update_stage(PipelineStage.CONCEPT_EXTRACTION, progress_callback, websocket_task_id)
             concepts = await self._step_2_concept_extraction(processed_input["text"])
             
             # Step 3: Multi-Dimensional Characterization
-            await self._update_stage(PipelineStage.CHARACTERIZATION, progress_callback)
+            await self._update_stage(PipelineStage.CHARACTERIZATION, progress_callback, websocket_task_id)
             characterization = await self._step_3_characterization(concepts)
             
             # Step 4: Human Validation (simulated)
-            await self._update_stage(PipelineStage.HUMAN_VALIDATION, progress_callback)
+            await self._update_stage(PipelineStage.HUMAN_VALIDATION, progress_callback, websocket_task_id)
             validated_concepts = await self._step_4_human_validation(characterization)
             
             # Step 5: Format Selection
-            await self._update_stage(PipelineStage.FORMAT_SELECTION, progress_callback)
+            await self._update_stage(PipelineStage.FORMAT_SELECTION, progress_callback, websocket_task_id)
             generation_config = await self._step_5_format_selection(format_type, samples_per_combination)
             
             # Step 6: Combinatorial Generation
-            await self._update_stage(PipelineStage.GENERATION, progress_callback)
+            await self._update_stage(PipelineStage.GENERATION, progress_callback, websocket_task_id)
             generated_data = await self._step_6_generation(
                 validated_concepts, 
                 generation_config,
@@ -118,11 +129,11 @@ class PipelineOrchestrator:
             )
             
             # Step 7: Quality Assurance
-            await self._update_stage(PipelineStage.QUALITY_ASSURANCE, progress_callback)
+            await self._update_stage(PipelineStage.QUALITY_ASSURANCE, progress_callback, websocket_task_id)
             quality_data = await self._step_7_quality_assurance(generated_data)
             
             # Step 8: Export
-            await self._update_stage(PipelineStage.EXPORT, progress_callback)
+            await self._update_stage(PipelineStage.EXPORT, progress_callback, websocket_task_id)
             export_data = await self._step_8_export(quality_data, format_type)
             
             # Complete pipeline
@@ -145,11 +156,27 @@ class PipelineOrchestrator:
             }
             
             logger.info(f"✅ Pipeline {pipeline_id} completed in {total_time:.2f}s")
+            
+            # Send WebSocket completion notification
+            if websocket_task_id and WEBSOCKET_AVAILABLE:
+                await send_pipeline_complete(
+                    task_id=websocket_task_id,
+                    results=final_result
+                )
+            
             return final_result
             
         except Exception as e:
             total_time = (datetime.now() - start_time).total_seconds()
             logger.error(f"❌ Pipeline {pipeline_id} failed at stage {self.current_stage}: {e}")
+            
+            # Send WebSocket error notification
+            if websocket_task_id and WEBSOCKET_AVAILABLE:
+                await send_pipeline_error(
+                    task_id=websocket_task_id,
+                    stage=self.current_stage.value if self.current_stage else "unknown",
+                    error=str(e)
+                )
             
             return {
                 "pipeline_id": pipeline_id,
@@ -160,19 +187,33 @@ class PipelineOrchestrator:
                 "partial_results": self.pipeline_state.get("results", {})
             }
     
-    async def _update_stage(self, stage: PipelineStage, progress_callback: Optional[Callable] = None):
-        """Update current pipeline stage and notify callback"""
+    async def _update_stage(self, stage: PipelineStage, progress_callback: Optional[Callable] = None, websocket_task_id: Optional[str] = None):
+        """Update current pipeline stage and notify callback + WebSocket"""
         self.current_stage = stage
         self.pipeline_state["current_stage"] = stage.value
         
         logger.info(f"📍 Pipeline stage: {stage.value}")
         
+        progress_data = {
+            "current_stage": stage.value,
+            "stages_completed": len(self.pipeline_state["stages_completed"]),
+            "total_stages": 8,
+            "progress": len(self.pipeline_state["stages_completed"]) / 8.0
+        }
+        
+        # Call progress callback
         if progress_callback:
-            await progress_callback({
-                "current_stage": stage.value,
-                "stages_completed": len(self.pipeline_state["stages_completed"]),
-                "total_stages": 8
-            })
+            await progress_callback(progress_data)
+        
+        # Send WebSocket update if task ID provided
+        if websocket_task_id and WEBSOCKET_AVAILABLE:
+            await send_pipeline_update(
+                task_id=websocket_task_id,
+                stage=stage.value,
+                progress=progress_data["progress"],
+                message=f"Starting {stage.value}",
+                data=progress_data
+            )
     
     async def _step_1_input_processing(self, input_text: str) -> Dict[str, Any]:
         """Step 1: Process and validate input text"""

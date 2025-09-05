@@ -2,33 +2,47 @@ import { useState, useCallback } from 'react'
 import InputSection from './components/InputSection'
 import ConceptContainer from './components/ConceptContainer'
 import GenerationModal from './components/GenerationModal'
-import { usePipeline } from './hooks/usePipeline'
+import StageIndicator from './components/StageIndicator'
+import { usePipelineWebSocket } from './hooks/usePipelineWebSocket'
 
 function App() {
   const {
+    isConnected,
     currentStep,
+    isProcessing,
+    error,
     concepts,
     characterization,
-    isProcessing,
+    generatedSamples,
+    currentStage,
+    overallProgress,
+    inputText,
+    setInputText,
     extractConcepts,
     runCharacterization,
-    startGeneration
-  } = usePipeline()
+    runFullPipeline,
+    reset
+  } = usePipelineWebSocket()
 
   const [showGenerationModal, setShowGenerationModal] = useState(false)
+  const [selectedConcepts, setSelectedConcepts] = useState([])
 
   const handleTextSubmit = useCallback(async (text) => {
     await extractConcepts(text)
   }, [extractConcepts])
 
   const handleConceptsComplete = useCallback(async (selectedConcepts) => {
+    setSelectedConcepts(selectedConcepts)
     await runCharacterization(selectedConcepts)
   }, [runCharacterization])
 
-  const handleGenerationStart = useCallback((config) => {
-    startGeneration(config)
+  const handleGenerationStart = useCallback(async (config) => {
+    await runFullPipeline({
+      input_text: inputText,
+      ...config
+    })
     setShowGenerationModal(false)
-  }, [startGeneration])
+  }, [runFullPipeline, inputText])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -48,20 +62,6 @@ function App() {
                   AI-powered combinatorial synthetic data generation
                 </p>
               </div>
-            </div>
-            
-            {/* Status indicator */}
-            <div className="text-sm text-gray-600 flex items-center space-x-4">
-              {concepts.length > 0 && (
-                <div className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full">
-                  {concepts.length} concepts extracted
-                </div>
-              )}
-              {Object.keys(characterization).length > 0 && (
-                <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full">
-                  {Object.keys(characterization).length} dimensions characterized
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -85,12 +85,12 @@ function App() {
             {concepts.length > 0 && (
               <ConceptContainer
                 title="Core Concepts"
-                concepts={concepts.map(c => c.name)}
+                concepts={concepts.map(c => typeof c === 'string' ? c : c.name)}
                 layout="row"
                 style="primary"
                 loading={isProcessing && currentStep === 2}
                 onComplete={handleConceptsComplete}
-                showCompleteButton={currentStep === 2}
+                showCompleteButton={currentStep === 2 && !isProcessing}
               />
             )}
 
@@ -101,10 +101,11 @@ function App() {
                   <ConceptContainer
                     key={dimension}
                     title={`${dimension.charAt(0).toUpperCase() + dimension.slice(1)} Context`}
-                    concepts={suggestions}
+                    concepts={Array.isArray(suggestions) ? suggestions : []}
                     layout="column"
                     style="secondary"
                     loading={isProcessing && currentStep === 3}
+                    showRemoveX={true}
                   />
                 ))}
               </div>
@@ -116,7 +117,7 @@ function App() {
           <div className="space-y-6">
             
             {/* Generation Controls */}
-            {Object.keys(characterization).length > 0 && (
+            {Object.keys(characterization).length > 0 && currentStep >= 3 && (
               <div className="bg-white rounded-lg shadow-sm p-6 border">
                 <h3 className="text-lg font-semibold mb-4">
                   Generation Controls
@@ -158,7 +159,7 @@ function App() {
                 </div>
                 <div className="flex items-start space-x-2">
                   <span className="font-bold text-primary-600">5.</span>
-                  <span>Generate 50K+ synthetic data samples</span>
+                  <span>Generate synthetic data samples</span>
                 </div>
               </div>
               
@@ -176,6 +177,15 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Stage Indicator - Bottom Right */}
+      <StageIndicator
+        currentStage={currentStage}
+        overallProgress={overallProgress}
+        isProcessing={isProcessing}
+        isConnected={isConnected}
+        error={error}
+      />
 
       {/* Generation Modal */}
       {showGenerationModal && (

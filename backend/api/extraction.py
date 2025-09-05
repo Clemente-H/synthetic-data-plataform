@@ -3,7 +3,7 @@
 Extraction API - Steps 1-2: Input Processing + Concept Extraction
 """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Union
 import logging
@@ -11,6 +11,7 @@ import asyncio
 from datetime import datetime
 
 from agents.concept_extractor import ConceptExtractor
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,11 @@ class ExtractionResponse(BaseModel):
     extraction_metadata: Optional[Dict[str, Any]] = None
     processing_time_seconds: float
     total_concepts_extracted: int
+
+class WebSocketExtractionResponse(BaseModel):
+    status: str = Field(..., description="Task status")
+    task_id: str = Field(..., description="Task ID for WebSocket subscription") 
+    message: str = Field(..., description="Human readable message")
 
 @router.options("/extract-concepts")
 async def options_extract_concepts():
@@ -110,6 +116,86 @@ async def extract_concepts(request: ExtractionRequest):
                 "processing_time": processing_time
             }
         )
+
+@router.options("/extract-concepts-websocket")
+async def options_extract_concepts_websocket():
+    return {}
+
+@router.post("/extract-concepts-websocket", response_model=WebSocketExtractionResponse)
+async def extract_concepts_websocket(request: ExtractionRequest, background_tasks: BackgroundTasks):
+    """
+    Step 2: Extract concepts with WebSocket progress updates
+    
+    Returns a task_id immediately, then sends progress via WebSocket
+    """
+    from api.websocket import send_pipeline_update, send_pipeline_complete, send_pipeline_error
+    
+    task_id = str(uuid.uuid4())
+    logger.info(f"🔍 Starting WebSocket extraction task: {task_id}")
+    
+    async def run_extraction_with_websocket():
+        try:
+            await send_pipeline_update(
+                task_id=task_id,
+                stage="concept_extraction",
+                progress=0.0,
+                message="Starting concept extraction...",
+                data={"input_length": len(request.input_text)}
+            )
+            
+            # Extract concepts
+            raw_concepts = await concept_extractor.extract_from_text(
+                input_text=request.input_text,
+                max_concepts=request.max_concepts
+            )
+            
+            await send_pipeline_update(
+                task_id=task_id,
+                stage="concept_extraction", 
+                progress=0.5,
+                message="Processing extracted concepts...",
+                data={"concepts_found": len(raw_concepts)}
+            )
+            
+            # Format concepts
+            concepts = [
+                ConceptResponse(
+                    name=concept.get("name", ""),
+                    confidence=concept.get("confidence", 0.8),
+                    relevance=concept.get("relevance", 7),
+                    category=concept.get("category", "general"),
+                    description=concept.get("description", "")
+                ) for concept in raw_concepts
+            ]
+            
+            result = {
+                "status": "success",
+                "concepts": [c.dict() for c in concepts],
+                "extraction_metadata": {
+                    "input_length": len(request.input_text),
+                    "extraction_time": datetime.now().isoformat()
+                },
+                "total_concepts_extracted": len(concepts)
+            }
+            
+            await send_pipeline_complete(task_id=task_id, results=result)
+            
+        except Exception as e:
+            logger.error(f"❌ WebSocket extraction failed: {e}")
+            await send_pipeline_error(
+                task_id=task_id,
+                stage="concept_extraction",
+                error=str(e)
+            )
+    
+    # Start background task
+    background_tasks.add_task(run_extraction_with_websocket)
+    
+    return WebSocketExtractionResponse(
+        status="started",
+        task_id=task_id,
+        message=f"Concept extraction started. Subscribe to task_id: {task_id}"
+    )
 
 @router.post("/extract-from-file")
 async def extract_from_file(file: UploadFile = File(...), max_concepts: int = 30):
