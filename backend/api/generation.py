@@ -72,6 +72,10 @@ class GenerationStatus(BaseModel):
 # In-memory task storage (in production, use Redis or database)
 generation_tasks: Dict[str, Dict[str, Any]] = {}
 
+@router.options("/generate")
+async def options_generate():
+    return {}
+
 @router.post("/generate", response_model=GenerationResponse)
 async def generate_synthetic_data(request: GenerationRequest, background_tasks: BackgroundTasks):
     """

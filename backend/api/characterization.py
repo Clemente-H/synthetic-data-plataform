@@ -53,6 +53,10 @@ class CharacterizationResponse(BaseModel):
     total_processing_time_seconds: float
     pipeline_metadata: Optional[Dict[str, Any]] = None
 
+@router.options("/characterize")
+async def options_characterize():
+    return {}
+
 @router.post("/characterize", response_model=CharacterizationResponse)
 async def characterize_concepts(request: CharacterizationRequest):
     """
