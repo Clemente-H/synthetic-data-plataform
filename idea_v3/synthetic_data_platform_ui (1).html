@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthetic Data Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f7fafc;
+            color: #2d3748;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 3rem;
+            background: #f7fafc;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #2f855a;
+            background: #f0fff4;
+        }
+
+        .upload-area.has-file {
+            border-color: #2f855a;
+            background: #f0fff4;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #a0aec0;
+        }
+
+        .upload-area.has-file .upload-icon {
+            color: #2f855a;
+        }
+
+        /* Pulsing Animation */
+        .pulsing {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 0.6; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.02);
+            }
+        }
+
+        /* Core Concepts Section */
+        .concepts-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .concepts-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .concept-pill {
+            background: #e6fffa;
+            color: #234e52;
+            padding: 0.75rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            border: 2px solid #b2f5ea;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .concept-pill:hover {
+            background: #b2f5ea;
+            transform: translateY(-1px);
+        }
+
+        /* Dimensions Section */
+        .dimensions-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .dimension-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .dimension-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .dimension-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .dimension-icon {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+
+        .dimension-concepts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .dimension-concept {
+            background: #f0fff4;
+            color: #2f855a;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid #9ae6b4;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dimension-concept:hover {
+            background: #c6f6d5;
+        }
+
+        .dimension-concept:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e53e3e;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Generation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .generation-modal {
+            background: white;
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 2.5rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .modal-overlay.active .generation-modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #a0aec0;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .format-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .format-card:hover {
+            border-color: #2f855a;
+            transform: translateY(-2px);
+        }
+
+        .format-card.selected {
+            border-color: #2f855a;
+            background: #f0fff4;
+        }
+
+        .format-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a202c;
+        }
+
+        .format-description {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .samples-section {
+            margin-bottom: 2rem;
+        }
+
+        .samples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sample-control {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sample-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .sample-input {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .sample-input:focus {
+            outline: none;
+            border-color: #2f855a;
+        }
+
+        .estimate-display {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .estimate-title {
+            font-weight: 600;
+            color: #2f855a;
+            margin-bottom: 0.5rem;
+        }
+
+        .estimate-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2f855a;
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            background: linear-gradient(135deg, #2f855a, #38a169);
+            color: white;
+            padding: 1.5rem 3rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 30px rgba(47, 133, 90, 0.4);
+            width: 100%;
+            transform: perspective(1000px) rotateX(0deg);
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: perspective(1000px) rotateX(-5deg) translateY(-4px);
+            box-shadow: 0 15px 40px rgba(47, 133, 90, 0.6);
+        }
+
+        .generate-btn:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Section */
+        .results-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 2.5rem;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .results-section.visible {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-card {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .result-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2f855a;
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-top: 0.5rem;
+        }
+
+        .download-btn {
+            background: #2f855a;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: #276749;
+            transform: translateY(-2px);
+        }
+
+        /* Ready Button */
+        .ready-btn {
+            background: linear-gradient(135deg, #3182ce, #2b77cb);
+            color: white;
+            padding: 1.25rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(49, 130, 206, 0.4);
+            margin: 2rem auto;
+            display: block;
+        }
+
+        .ready-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(49, 130, 206, 0.6);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #2f855a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.75rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-text {
+            margin-top: 1rem;
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Synthetic Data Generator</h1>
+            <p class="subtitle">Generate high-quality training datasets through intelligent concept characterization</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="upload-area" id="uploadArea" onclick="handleUpload()">
+                <div class="upload-icon" id="uploadIcon">📄</div>
+                <h3 id="uploadTitle">Drop your document here or click to upload</h3>
+                <p id="uploadSubtitle">PDF, TXT, DOCX supported • Max 10MB</p>
+            </div>
+        </div>
+
+        <!-- Core Concepts Section -->
+        <div class="concepts-section" id="conceptsSection" style="display: none;">
+            <div class="section-title">
+                <span>🧠 Core Concepts Extracted</span>
+            </div>
+            <div class="concepts-row" id="conceptsRow">
+                <!-- Concepts will be populated here -->
+            </div>
+        </div>
+
+        <!-- Dimensions Section -->
+        <div class="dimensions-section" id="dimensionsSection" style="display: none;">
+            <div class="dimension-card">
+                <div class="dimension-title">
+                    <span class="dimension-icon">🌍</span>
+                    Geographic Contexts
+                </div>
+                <div class="dimension-concepts" id="geographic-concepts">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <div class="dimension-card">
+                <div class="dimension-title">
+                    <span class="dimension-icon">🗣️</span>
+                    Linguistic Variations
+                </div>
+                <div class="dimension-concepts" id="linguistic-concepts">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <div class="dimension-card">
+                <div class="dimension-title">
+                    <span class="dimension-icon">🎭</span>
+                    Cultural References
+                </div>
+                <div class="dimension-concepts" id="cultural-concepts">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <div class="dimension-card">
+                <div class="dimension-title">
+                    <span class="dimension-icon">👥</span>
+                    Persona Profiles
+                </div>
+                <div class="dimension-concepts" id="persona-concepts">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <div class="dimension-card">
+                <div class="dimension-title">
+                    <span class="dimension-icon">🔬</span>
+                    Domain Specializations
+                </div>
+                <div class="dimension-concepts" id="domain-concepts">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Ready Button -->
+        <button class="ready-btn" id="readyBtn" style="display: none;" onclick="openGenerationModal()">
+            🚀 Ready to Generate Dataset
+        </button>
+
+        <!-- Generation Modal -->
+        <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+            <div class="generation-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2 class="modal-title">Configure Generation</h2>
+                    <button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+
+                <div class="format-section">
+                    <h3 style="margin-bottom: 1rem; color: #1a202c;">Select Output Format</h3>
+                    <div class="format-grid">
+                        <div class="format-card" onclick="selectFormat('raw')">
+                            <div class="format-title">Raw Data</div>
+                            <div class="format-description">Plain text examples</div>
+                        </div>
+                        <div class="format-card selected" onclick="selectFormat('sft')">
+                            <div class="format-title">SFT Format</div>
+                            <div class="format-description">Instruction-response pairs</div>
+                        </div>
+                        <div class="format-card" onclick="selectFormat('dpo')">
+                            <div class="format-title">DPO Format</div>
+                            <div class="format-description">Preference pairs</div>
+                        </div>
+                        <div class="format-card" onclick="selectFormat('qa')">
+                            <div class="format-title">Q&A Format</div>
+                            <div class="format-description">Question-answer pairs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="samples-section">
+                    <h3 style="margin-bottom: 1rem; color: #1a202c;">Samples per Category</h3>
+                    <div class="samples-grid">
+                        <div class="sample-control">
+                            <label class="sample-label">Geographic</label>
+                            <input type="number" class="sample-input" value="500" onchange="updateEstimate()">
+                        </div>
+                        <div class="sample-control">
+                            <label class="sample-label">Linguistic</label>
+                            <input type="number" class="sample-input" value="400" onchange="updateEstimate()">
+                        </div>
+                        <div class="sample-control">
+                            <label class="sample-label">Cultural</label>
+                            <input type="number" class="sample-input" value="600" onchange="updateEstimate()">
+                        </div>
+                        <div class="sample-control">
+                            <label class="sample-label">Personas</label>
+                            <input type="number" class="sample-input" value="450" onchange="updateEstimate()">
+                        </div>
+                        <div class="sample-control">
+                            <label class="sample-label">Domain</label>
+                            <input type="number" class="sample-input" value="550" onchange="updateEstimate()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="estimate-display">
+                    <div class="estimate-title">Estimated Total Dataset Size</div>
+                    <div class="estimate-number" id="estimateNumber">~127,500</div>
+                    <div style="font-size: 0.9rem; color: #4a5568; margin-top: 0.5rem;">
+                        unique examples across 5 complexity levels
+                    </div>
+                </div>
+
+                <button class="generate-btn" onclick="startGeneration()">
+                    <span id="generateText">🚀 Generate Synthetic Dataset</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="section-title">
+                <span>✨ Generation Complete!</span>
+            </div>
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-number">127,483</div>
+                    <div class="result-label">Total Examples</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-number">5</div>
+                    <div class="result-label">Complexity Levels</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-number">2.4GB</div>
+                    <div class="result-label">Dataset Size</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-number">98.7%</div>
+                    <div class="result-label">Quality Score</div>
+                </div>
+            </div>
+            <button class="download-btn">📥 Download Dataset (HuggingFace Format)</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedFormat = 'sft';
+
+        const coreConcepts = [
+            'machine learning', 'data preprocessing', 'model validation', 'feature engineering',
+            'cross-validation', 'hyperparameter tuning', 'data cleaning', 'outlier detection',
+            'dimensionality reduction', 'ensemble methods', 'neural networks', 'deep learning',
+            'supervised learning', 'unsupervised learning', 'reinforcement learning', 'classification',
+            'regression', 'clustering', 'natural language processing', 'computer vision',
+            'time series analysis', 'statistical modeling', 'data visualization', 'model deployment'
+        ];
+
+        const dimensionData = {
+            'geographic-concepts': ['US regulations', 'GDPR compliance', 'Asian markets', 'Latin America', 'European standards', 'Remote work policies', 'Cultural differences', 'Time zones'],
+            'linguistic-concepts': ['Technical jargon', 'Formal language', 'Casual tone', 'Academic writing', 'Business terminology', 'Multilingual support', 'Code examples', 'Documentation'],
+            'cultural-concepts': ['Silicon Valley culture', 'Academic research', 'Startup environment', 'Enterprise context', 'Open source community', 'Industry conferences', 'Remote collaboration'],
+            'persona-concepts': ['Data scientist', 'ML engineer', 'Product manager', 'CTO', 'Researcher', 'Student', 'Consultant', 'Team lead', 'Junior developer'],
+            'domain-concepts': ['Healthcare AI', 'Financial modeling', 'Autonomous systems', 'Recommendation engines', 'Fraud detection', 'Computer vision', 'NLP applications', 'IoT analytics']
+        };
+
+        function handleUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const uploadIcon = document.getElementById('uploadIcon');
+            const uploadTitle = document.getElementById('uploadTitle');
+            const uploadSubtitle = document.getElementById('uploadSubtitle');
+
+            uploadArea.classList.add('has-file');
+            uploadIcon.textContent = '⏳';
+            uploadTitle.textContent = 'Processing document...';
+            uploadSubtitle.textContent = 'Extracting concepts and analyzing content';
+            uploadArea.classList.add('pulsing');
+
+            setTimeout(() => {
+                uploadIcon.textContent = '✅';
+                uploadTitle.textContent = 'Document processed successfully';
+                uploadSubtitle.textContent = 'machine_learning_guide.pdf • 1.2MB • Ready for analysis';
+                uploadArea.classList.remove('pulsing');
+                
+                setTimeout(() => {
+                    showConcepts();
+                }, 1000);
+            }, 3000);
+        }
+
+        function showConcepts() {
+            const conceptsSection = document.getElementById('conceptsSection');
+            const conceptsRow = document.getElementById('conceptsRow');
+            
+            conceptsSection.style.display = 'block';
+            conceptsSection.classList.add('pulsing');
+
+            // Populate concepts with animation
+            coreConcepts.forEach((concept, index) => {
+                setTimeout(() => {
+                    const pill = document.createElement('div');
+                    pill.className = 'concept-pill';
+                    pill.textContent = concept;
+                    conceptsRow.appendChild(pill);
+                }, index * 100);
+            });
+
+            setTimeout(() => {
+                conceptsSection.classList.remove('pulsing');
+                showDimensions();
+            }, 3000);
+        }
+
+        function showDimensions() {
+            const dimensionsSection = document.getElementById('dimensionsSection');
+            dimensionsSection.style.display = 'grid';
+            
+            // Populate each dimension with a pulsing effect
+            Object.keys(dimensionData).forEach((dimensionId, index) => {
+                setTimeout(() => {
+                    const container = document.getElementById(dimensionId);
+                    const card = container.closest('.dimension-card');
+                    card.classList.add('pulsing');
+                    
+                    dimensionData[dimensionId].forEach((concept, conceptIndex) => {
+                        setTimeout(() => {
+                            const conceptEl = document.createElement('div');
+                            conceptEl.className = 'dimension-concept';
+                            conceptEl.innerHTML = `
+                                ${concept}
+                                <button class="remove-btn" onclick="removeConcept(this)">×</button>
+                            `;
+                            container.appendChild(conceptEl);
+                        }, conceptIndex * 150);
+                    });
+
+                    setTimeout(() => {
+                        card.classList.remove('pulsing');
+                    }, dimensionData[dimensionId].length * 150 + 500);
+                }, index * 800);
+            });
+
+            setTimeout(() => {
+                showReadyButton();
+            }, 8000);
+        }
+
+        function showReadyButton() {
+            const readyBtn = document.getElementById('readyBtn');
+            readyBtn.style.display = 'block';
+            readyBtn.style.animation = 'slideUp 0.5s ease-out';
+        }
+
+        function removeConcept(btn) {
+            btn.parentElement.remove();
+        }
+
+        function openGenerationModal() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            modalOverlay.classList.add('active');
+            updateEstimate();
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== document.getElementById('modalOverlay')) return;
+            const modalOverlay = document.getElementById('modalOverlay');
+            modalOverlay.classList.remove('active');
+        }
+
+        function selectFormat(format) {
+            selectedFormat = format;
+            document.querySelectorAll('.format-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.format-card').classList.add('selected');
+        }
+
+        function updateEstimate() {
+            const inputs = document.querySelectorAll('.sample-input');
+            let total = 0;
+            inputs.forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            
+            // Multiply by complexity levels and combinations
+            const estimate = Math.floor(total * 5 * 10.2); // 5 complexity levels, combinatorial factor
+            document.getElementById('estimateNumber').textContent = `~${estimate.toLocaleString()}`;
+        }
+
+        function startGeneration() {
+            const btn = document.querySelector('.generate-btn');
+            const text = document.getElementById('generateText');
+            const modalOverlay = document.getElementById('modalOverlay');
+            
+            btn.disabled = true;
+            text.innerHTML = '<span class="loading"></span>Generating dataset...';
+            
+            setTimeout(() => {
+                text.innerHTML = '<span class="loading"></span>Processing combinations...';
+            }, 2000);
+
+            setTimeout(() => {
+                text.innerHTML = '<span class="loading"></span>Quality validation...';
+            }, 5000);
+            
+            setTimeout(() => {
+                text.innerHTML = '✨ Generation complete!';
+                btn.disabled = false;
+                
+                setTimeout(() => {
+                    modalOverlay.classList.remove('active');
+                    showResults();
+                }, 1500);
+            }, 8000);
+        }
+
+        function showResults() {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.classList.add('visible');
+        }
+    </script>
+</body>
+</html>

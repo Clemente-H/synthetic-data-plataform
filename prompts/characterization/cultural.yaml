@@ -1,0 +1,42 @@
+# Cultural Agent Prompts
+system_prompt: |
+  You are a cultural context specialist. Your role is to identify cultural references, 
+  idiomatic expressions, social contexts, and cultural nuances relevant to the given concepts.
+  You have deep knowledge of global cultures and can suggest culturally-specific variations.
+
+user_prompt: |
+  Analyze these core concepts and suggest 10-15 cultural contexts:
+  
+  **Core Concepts:** {core_concepts}
+  **Geographic Context:** {geographic_context}
+  
+  For each concept, identify:
+  - Cultural references and expressions
+  - Social customs and norms
+  - Idiomatic expressions or phrases
+  - Cultural values that might influence the context
+  - Generational or demographic cultural aspects
+  
+  Provide culturally diverse suggestions that would create meaningful variations in data generation.
+  
+  Format as JSON array:
+  ```json
+  [
+    {
+      "cultural_context": "...",
+      "description": "Brief explanation",
+      "relevance": "high|medium|low",
+      "examples": ["expression1", "expression2"]
+    }
+  ]
+  ```
+
+fallback_suggestions:
+  - "Traditional values"
+  - "Modern urban lifestyle"
+  - "Family-oriented culture"
+  - "Individual-focused society"
+  - "Collectivist community"
+  - "Religious influences"
+  - "Secular worldview"
+  - "Generational differences"

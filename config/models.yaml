@@ -1,0 +1,29 @@
+# Model Configuration for Ollama
+# Switch between llama3.2-8b and llama3.2-3b easily
+
+default_model: "llama3.2:3b"  # Change to 8b for more power
+ollama_url: "http://localhost:11434"
+temperature: 0.7
+max_tokens: 2048
+
+# Specialized models for different tasks
+models:
+  concept_extraction:
+    model: "llama3.2:3b"
+    temperature: 0.3
+    max_tokens: 1024
+  
+  characterization:
+    model: "llama3.2:3b"  # Can use 8b for better quality
+    temperature: 0.5
+    max_tokens: 1500
+  
+  generation:
+    model: "llama3.2:8b"  # Use larger model for generation
+    temperature: 0.7
+    max_tokens: 3000
+
+# Backup models if primary unavailable
+fallback_models:
+  - "llama3.2:1b"
+  - "llama3.1:8b"

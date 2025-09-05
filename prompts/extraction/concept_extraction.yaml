@@ -1,0 +1,53 @@
+# Concept Extraction Prompt - Step 2 of Pipeline
+system_prompt: |
+  You are an expert at extracting key concepts from text. Your role is to identify 
+  20-50 core concepts, terms, entities, and ideas that are central to the input text.
+  
+  Focus on extracting:
+  - Main topics and themes
+  - Important entities (people, places, organizations, technologies)
+  - Technical terms and domain-specific concepts  
+  - Key processes, procedures, or methodologies
+  - Important relationships or connections
+  - Actionable concepts that can be used for data generation
+  
+  Prioritize concepts that would be useful for generating diverse synthetic data scenarios.
+
+user_prompt: |
+  Extract 20-50 key concepts from this text that would be valuable for synthetic data generation.
+  
+  For each concept, provide:
+  - name: Clear, specific concept name
+  - relevance: Score 1-10 (10 = most central to the text)
+  - category: Type (entity, process, domain_term, theme, technology, etc.)
+  - description: Brief explanation of why this concept is important
+  
+  Input text:
+  ```
+  {input_text}
+  ```
+  
+  Format as JSON array:
+  ```json
+  [
+    {{
+      "name": "Concept Name",
+      "relevance": 9,
+      "category": "entity",
+      "description": "Brief explanation of importance"
+    }}
+  ]
+  ```
+
+validation:
+  min_concepts: 20
+  max_concepts: 50
+  required_fields: ["name", "relevance", "category"]
+  relevance_range: [1, 10]
+
+fallback_keywords:
+  - "Main Topic"
+  - "Key Process"
+  - "Important Entity"
+  - "Domain Concept"
+  - "Technical Term"

@@ -1,0 +1,58 @@
+# Geographic Agent Prompts
+system_prompt: |
+  You are a geographic context specialist. Your role is to identify location-specific 
+  regulations, cultural norms, legal frameworks, regional business practices, and 
+  geographic variations relevant to the given concepts.
+  
+  Consider:
+  - Regional regulations and compliance requirements
+  - Local business practices and norms
+  - Geographic-specific challenges or opportunities
+  - Climate and environmental factors
+  - Economic conditions by region
+  - Legal and regulatory differences
+
+user_prompt: |
+  Analyze these core concepts and suggest 10-15 geographic contexts that would create
+  meaningful variations for synthetic data generation:
+  
+  **Core Concepts:** {core_concepts}
+  
+  For each geographic context, consider:
+  - Regional regulations or legal requirements
+  - Local business practices and customs
+  - Economic conditions and market differences
+  - Cultural norms specific to that region
+  - Environmental or climate considerations
+  - Language or communication differences
+  
+  Provide geographically diverse suggestions from different continents and economic regions.
+  
+  Format as JSON array:
+  ```json
+  [
+    {{
+      "geographic_context": "Region/Country name",
+      "description": "Key characteristics relevant to the concepts",
+      "relevance": "high|medium|low",
+      "regulatory_notes": "Key regulations or legal considerations"
+    }}
+  ]
+  ```
+
+fallback_suggestions:
+  - "United States"
+  - "European Union"
+  - "United Kingdom"
+  - "Canada"
+  - "Australia"
+  - "Japan"
+  - "South Korea" 
+  - "Singapore"
+  - "Brazil"
+  - "Mexico"
+  - "India"
+  - "China"
+  - "Southeast Asia"
+  - "Middle East"
+  - "Nordic Countries"
