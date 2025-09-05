@@ -41,6 +41,7 @@ const ConceptContainer = ({
   }
   const baseClasses = `
     bg-white rounded-lg shadow-sm border transition-all duration-300
+    hover:shadow-lg hover:-translate-y-1
     ${loading ? 'animate-pulse' : ''}
     ${className}
   `;
@@ -66,7 +67,7 @@ const ConceptContainer = ({
         : 'bg-primary-50 border-primary-200 text-primary-800 hover:bg-primary-100' 
       : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
     }
-    hover:shadow-sm transform hover:scale-105
+    hover:shadow-md hover:-translate-y-0.5 transform transition-all duration-200
   `;
 
   const removeButtonClasses = `

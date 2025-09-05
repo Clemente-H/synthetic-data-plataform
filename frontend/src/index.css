@@ -2,14 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Breathing animation */
+/* Breathing animation - refined like HTML dummy */
 @keyframes breathing {
   0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.2); }
+  50% { opacity: 1; transform: scale(1.02); }
 }
 
 .animate-breathing {
   animation: breathing 2s ease-in-out infinite;
+}
+
+/* Pulsing animation - matching HTML dummy */
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 0.6; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-refined {
+  animation: pulse 2s ease-in-out infinite;
 }
 
 /* Border radius utilities matching the design */
