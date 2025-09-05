@@ -44,6 +44,8 @@ async def options_extract_concepts():
 
 @router.post("/extract-concepts", response_model=ExtractionResponse)
 async def extract_concepts(request: ExtractionRequest):
+    logger.info(f"🔍 Received extraction request: {len(request.input_text)} chars")
+    logger.info(f"🔍 Request details: max_concepts={request.max_concepts}, include_metadata={request.include_metadata}")
     """
     Step 2: Extract 20-50 core concepts from user input text
     
