@@ -35,8 +35,8 @@ function App() {
 
   const handleConceptsComplete = useCallback(async (selectedConcepts) => {
     setSelectedConcepts(selectedConcepts)
-    await runCharacterization(editableConcepts.length > 0 ? editableConcepts : selectedConcepts)
-  }, [runCharacterization, editableConcepts])
+    await runCharacterization(selectedConcepts)
+  }, [runCharacterization])
 
   // Sync concepts to editable concepts when they arrive
   useEffect(() => {
@@ -44,6 +44,18 @@ function App() {
       setEditableConcepts(concepts.map(c => typeof c === 'string' ? c : c.name))
     }
   }, [concepts, editableConcepts])
+
+  // Auto-continue to characterization after concepts extraction (like HTML dummy)
+  useEffect(() => {
+    if (concepts.length > 0 && currentStep === 2 && !isProcessing) {
+      // Auto-advance after 2 seconds to show concepts briefly
+      const timer = setTimeout(() => {
+        handleConceptsComplete(concepts)
+      }, 2000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [concepts, currentStep, isProcessing, handleConceptsComplete])
 
   const handleAddConcepts = useCallback(() => {
     if (!newConceptText.trim()) return
@@ -123,37 +135,19 @@ function App() {
                 ))}
               </div>
 
-              {/* Add new concepts */}
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="text-sm font-medium text-gray-700 mb-3">
-                  Add more concepts (comma-separated):
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newConceptText}
-                    onChange={(e) => setNewConceptText(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddConcepts()}
-                    placeholder="concept1, concept2, concept3"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <button
-                    onClick={handleAddConcepts}
-                    disabled={!newConceptText.trim()}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
               
               {currentStep === 2 && !isProcessing && (
-                <button
-                  onClick={() => handleConceptsComplete(editableConcepts)}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Continue to Characterization ({editableConcepts.length} concepts)
-                </button>
+                <div className="text-center">
+                  <button
+                    onClick={() => handleConceptsComplete(concepts)}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium mr-4"
+                  >
+                    Continue Now
+                  </button>
+                  <div className="text-sm text-gray-500 mt-2">
+                    Auto-advancing in 2 seconds...
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -307,6 +301,62 @@ function App() {
                         </button>
                       </div>
                     )) : []}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Manual Concept Addition - Show after dimensions are loaded */}
+          {Object.keys(characterization).length > 0 && currentStep >= 3 && !isProcessing && (
+            <div className="bg-white rounded-2xl shadow-lg p-8 border slide-up">
+              <div className="text-xl font-semibold text-gray-800 mb-6">
+                Add More Concepts
+              </div>
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm font-medium text-gray-700 mb-3">
+                  Add additional concepts (comma-separated):
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newConceptText}
+                    onChange={(e) => setNewConceptText(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddConcepts()}
+                    placeholder="concept1, concept2, concept3"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button
+                    onClick={handleAddConcepts}
+                    disabled={!newConceptText.trim()}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* Show added concepts */}
+              {editableConcepts.length > concepts.length && (
+                <div className="mb-4">
+                  <div className="text-sm font-medium text-gray-700 mb-2">
+                    Added Concepts:
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {editableConcepts.slice(concepts.length).map((concept, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm border border-blue-200 group flex items-center"
+                      >
+                        {concept}
+                        <button
+                          onClick={() => handleRemoveConcept(concept)}
+                          className="ml-2 text-blue-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

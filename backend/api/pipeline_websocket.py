@@ -192,8 +192,15 @@ async def characterize_websocket(
                 import asyncio
                 await asyncio.sleep(1)  # Simulate processing time
                 
-                # Mock results for demonstration
-                results[agent_name] = [f"{agent_name}_context_{j}" for j in range(12)]
+                # Mock results for demonstration with realistic contexts
+                mock_contexts = {
+                    'geographic': ['US regulations', 'GDPR compliance', 'Asian markets', 'Latin America', 'European standards', 'Remote work policies', 'Cultural differences', 'Time zones', 'Global standards', 'Regional laws', 'International trade', 'Cross-border'],
+                    'linguistic': ['Technical jargon', 'Formal language', 'Casual tone', 'Academic writing', 'Business terminology', 'Multilingual support', 'Code examples', 'Documentation', 'Plain English', 'Scientific terms', 'Industry vocab', 'Conversational'],
+                    'cultural': ['Silicon Valley culture', 'Academic research', 'Startup environment', 'Enterprise context', 'Open source community', 'Industry conferences', 'Remote collaboration', 'Corporate culture', 'Innovation mindset', 'Work-life balance', 'Diversity focus', 'Global teams'],
+                    'persona': ['Data scientist', 'ML engineer', 'Product manager', 'CTO', 'Researcher', 'Student', 'Consultant', 'Team lead', 'Junior developer', 'Senior architect', 'Business analyst', 'Technical writer'],
+                    'domain': ['Healthcare AI', 'Financial modeling', 'Autonomous systems', 'Recommendation engines', 'Fraud detection', 'Computer vision', 'NLP applications', 'IoT analytics', 'Cybersecurity', 'Cloud computing', 'Edge AI', 'MLOps']
+                }
+                results[agent_name] = mock_contexts.get(agent_name, [f"{agent_name}_context_{j}" for j in range(12)])
                 
                 await send_pipeline_update(
                     task_id=task_id,
