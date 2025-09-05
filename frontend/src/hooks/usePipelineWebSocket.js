@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useWebSocket } from './useWebSocket'
 
 const API_BASE = 'http://localhost:8000/api'
@@ -13,6 +13,7 @@ export const usePipelineWebSocket = () => {
   
   // Pipeline data
   const [concepts, setConcepts] = useState([])
+  const [selectedConcepts, setSelectedConcepts] = useState([])
   const [characterization, setCharacterization] = useState({})
   const [generatedSamples, setGeneratedSamples] = useState([])
   const [finalResults, setFinalResults] = useState(null)
@@ -31,6 +32,15 @@ export const usePipelineWebSocket = () => {
     onPipelineError,
     onSampleGenerated
   } = useWebSocket()
+
+  // Auto-continue characterization after concepts are extracted (temporarily disabled)
+  // useEffect(() => {
+  //   if (selectedConcepts.length > 0 && concepts.length > 0 && currentStep === 2 && !isProcessing) {
+  //     setTimeout(() => {
+  //       runCharacterization(selectedConcepts)
+  //     }, 1500) // Show concepts for 1.5 seconds then continue
+  //   }
+  // }, [selectedConcepts, concepts, currentStep, isProcessing])
 
   // Setup WebSocket listeners
   const setupWebSocketListeners = useCallback((taskId) => {
@@ -96,13 +106,27 @@ export const usePipelineWebSocket = () => {
       setOverallProgress(1.0)
       setFinalResults(message.results)
       
-      // Extract final data from results
+      // Extract concepts from extraction completion
+      if (message.results?.concepts) {
+        setConcepts(message.results.concepts)
+        setCurrentStep(2) // Set to concepts display step
+        
+        // Auto-continue with characterization (temporarily disabled)
+      }
+      
+      // Extract characterization from characterization completion
+      if (message.results?.characterization) {
+        setCharacterization(message.results.characterization)
+        setCurrentStep(3) // Set to characterization display step
+      }
+      
+      // Extract final data from full pipeline results
       if (message.results?.final_data?.samples) {
         setGeneratedSamples(message.results.final_data.samples)
       }
       
       if (message.results?.pipeline_metadata?.concepts_extracted) {
-        // Update with final concept count
+        // Update with final concept count - already handled above
       }
     })
     

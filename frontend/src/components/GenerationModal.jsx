@@ -1,162 +1,150 @@
 import { useState } from 'react'
 
 const GenerationModal = ({ onClose, onGenerate, concepts, characterization }) => {
-  const [config, setConfig] = useState({
-    format_type: 'qa',
-    samples_per_combination: 3,
-    max_total_samples: 100
+  const [selectedFormat, setSelectedFormat] = useState('sft')
+  const [samplesConfig, setSamplesConfig] = useState({
+    geographic: 500,
+    linguistic: 400,
+    cultural: 600,
+    persona: 450,
+    domain: 550
   })
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const formatOptions = [
-    { value: 'qa', label: 'Q&A Pairs', description: 'Question-answer pairs for conversational training' },
-    { value: 'sft', label: 'SFT Format', description: 'Instruction-response pairs for supervised fine-tuning' },
-    { value: 'dpo', label: 'DPO Format', description: 'Preference pairs for direct preference optimization' },
-    { value: 'raw', label: 'Raw Text', description: 'Unstructured text samples' }
+    { value: 'raw', label: 'Raw Data', description: 'Plain text examples' },
+    { value: 'sft', label: 'SFT Format', description: 'Instruction-response pairs' },
+    { value: 'dpo', label: 'DPO Format', description: 'Preference pairs' },
+    { value: 'qa', label: 'Q&A Format', description: 'Question-answer pairs' }
   ]
 
-  const estimatedCombinations = Object.values(characterization).reduce((acc, suggestions) => 
-    acc * Math.min(suggestions.length, 12), 1
-  )
-  const estimatedSamples = Math.min(estimatedCombinations * config.samples_per_combination, config.max_total_samples)
+  const updateEstimate = () => {
+    const total = Object.values(samplesConfig).reduce((sum, val) => sum + val, 0)
+    // Multiply by complexity levels and combinatorial factor
+    return Math.floor(total * 5 * 10.2)
+  }
 
-  const handleGenerate = () => {
-    onGenerate(config)
+  const handleUpdateSamples = (dimension, value) => {
+    setSamplesConfig(prev => ({
+      ...prev,
+      [dimension]: parseInt(value) || 0
+    }))
+  }
+
+  const handleGenerate = async () => {
+    setIsGenerating(true)
+    try {
+      await onGenerate({
+        format_type: selectedFormat,
+        samples_per_combination: 3,
+        max_total_samples: updateEstimate(),
+        samples_config: samplesConfig
+      })
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
-        <div className="p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="p-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
-              Generation Configuration
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Configure Generation
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-xl"
+              className="text-gray-400 hover:text-gray-600 text-3xl font-light"
             >
               ×
             </button>
           </div>
 
           {/* Format Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Output Format
-            </label>
-            <div className="space-y-2">
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Select Output Format
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {formatOptions.map((format) => (
-                <label key={format.value} className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="format"
-                    value={format.value}
-                    checked={config.format_type === format.value}
-                    onChange={(e) => setConfig(prev => ({ ...prev, format_type: e.target.value }))}
-                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{format.label}</div>
-                    <div className="text-sm text-gray-500">{format.description}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Sample Configuration */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Samples per Combination
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={config.samples_per_combination}
-                onChange={(e) => setConfig(prev => ({ 
-                  ...prev, 
-                  samples_per_combination: parseInt(e.target.value) || 1 
-                }))}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Total Samples
-              </label>
-              <input
-                type="number"
-                min="10"
-                max="10000"
-                value={config.max_total_samples}
-                onChange={(e) => setConfig(prev => ({ 
-                  ...prev, 
-                  max_total_samples: parseInt(e.target.value) || 100 
-                }))}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          </div>
-
-          {/* Generation Preview */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h3 className="font-medium text-gray-900 mb-2">Generation Preview</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">Concepts:</span>
-                <span className="ml-2 font-medium">{concepts.length}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Dimensions:</span>
-                <span className="ml-2 font-medium">{Object.keys(characterization).length}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Est. Combinations:</span>
-                <span className="ml-2 font-medium">{estimatedCombinations.toLocaleString()}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Est. Samples:</span>
-                <span className="ml-2 font-medium text-primary-600">{estimatedSamples.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Characterization Summary */}
-          <div className="mb-6">
-            <h3 className="font-medium text-gray-900 mb-2">Characterization Summary</h3>
-            <div className="space-y-2">
-              {Object.entries(characterization).map(([dimension, suggestions]) => (
-                <div key={dimension} className="flex items-center justify-between text-sm">
-                  <span className="capitalize text-gray-600">{dimension}:</span>
-                  <span className="text-gray-900">{suggestions.length} contexts</span>
+                <div
+                  key={format.value}
+                  onClick={() => setSelectedFormat(format.value)}
+                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
+                    selectedFormat === format.value 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-semibold text-gray-900 mb-1">{format.label}</div>
+                  <div className="text-sm text-gray-600">{format.description}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleGenerate}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
-            >
-              Start Generation
-            </button>
+          {/* Samples per Category */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Samples per Category
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {[
+                { key: 'geographic', label: 'Geographic' },
+                { key: 'linguistic', label: 'Linguistic' },
+                { key: 'cultural', label: 'Cultural' },
+                { key: 'persona', label: 'Personas' },
+                { key: 'domain', label: 'Domain' }
+              ].map(({ key, label }) => (
+                <div key={key} className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {label}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1000"
+                    value={samplesConfig[key]}
+                    onChange={(e) => handleUpdateSamples(key, e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-medium"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Processing Time Estimate */}
-          <div className="mt-4 text-xs text-gray-500 text-center">
-            Estimated processing time: {estimatedSamples < 100 ? '1-2 minutes' : estimatedSamples < 500 ? '5-10 minutes' : '10+ minutes'}
+          {/* Estimated Dataset Size */}
+          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6 mb-8 text-center">
+            <div className="text-sm font-medium text-gray-600 mb-2">
+              Estimated Total Dataset Size
+            </div>
+            <div className="text-4xl font-bold text-gray-900 mb-2">
+              ~{updateEstimate().toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-600">
+              unique examples across 5 complexity levels
+            </div>
           </div>
+
+          {/* Generate Button */}
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none"
+          >
+            {isGenerating ? (
+              <div className="flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                {isGenerating === 'processing' ? 'Processing combinations...' : 
+                 isGenerating === 'validation' ? 'Quality validation...' :
+                 'Generating dataset...'}
+              </div>
+            ) : (
+              'Generate Synthetic Dataset'
+            )}
+          </button>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import InputSection from './components/InputSection'
 import ConceptContainer from './components/ConceptContainer'
 import GenerationModal from './components/GenerationModal'
@@ -26,6 +26,8 @@ function App() {
 
   const [showGenerationModal, setShowGenerationModal] = useState(false)
   const [selectedConcepts, setSelectedConcepts] = useState([])
+  const [editableConcepts, setEditableConcepts] = useState([])
+  const [newConceptText, setNewConceptText] = useState('')
 
   const handleTextSubmit = useCallback(async (text) => {
     await extractConcepts(text)
@@ -33,8 +35,32 @@ function App() {
 
   const handleConceptsComplete = useCallback(async (selectedConcepts) => {
     setSelectedConcepts(selectedConcepts)
-    await runCharacterization(selectedConcepts)
-  }, [runCharacterization])
+    await runCharacterization(editableConcepts.length > 0 ? editableConcepts : selectedConcepts)
+  }, [runCharacterization, editableConcepts])
+
+  // Sync concepts to editable concepts when they arrive
+  useEffect(() => {
+    if (concepts.length > 0 && editableConcepts.length === 0) {
+      setEditableConcepts(concepts.map(c => typeof c === 'string' ? c : c.name))
+    }
+  }, [concepts, editableConcepts])
+
+  const handleAddConcepts = useCallback(() => {
+    if (!newConceptText.trim()) return
+    
+    const newConcepts = newConceptText
+      .split(',')
+      .map(concept => concept.trim())
+      .filter(concept => concept.length > 0)
+      .filter(concept => !editableConcepts.includes(concept))
+    
+    setEditableConcepts(prev => [...prev, ...newConcepts])
+    setNewConceptText('')
+  }, [newConceptText, editableConcepts])
+
+  const handleRemoveConcept = useCallback((conceptToRemove) => {
+    setEditableConcepts(prev => prev.filter(c => c !== conceptToRemove))
+  }, [])
 
   const handleGenerationStart = useCallback(async (config) => {
     await runFullPipeline({
@@ -47,134 +73,257 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">SD</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Synthetic Data Platform
-                </h1>
-                <p className="text-gray-600">
-                  AI-powered combinatorial synthetic data generation
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          <h1 className="text-3xl font-bold text-gray-900 text-center">
+            Synthetic Data Generator
+          </h1>
+          <p className="text-gray-600 text-center mt-2">
+            Generate high-quality training datasets through intelligent concept characterization
+          </p>
         </div>
-      </header>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content - 2 columns */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Step 1-2: Input & Concept Extraction */}
-            {currentStep <= 2 && (
-              <InputSection
-                onTextSubmit={handleTextSubmit}
-                isProcessing={isProcessing}
-                currentStep={currentStep}
-              />
-            )}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="space-y-8">
+          {/* Input Section - Show until we have concepts */}
+          {currentStep <= 2 && (
+            <InputSection
+              onTextSubmit={handleTextSubmit}
+              isProcessing={isProcessing}
+              currentStep={currentStep}
+            />
+          )}
 
-            {/* Step 2: Core Concepts Display */}
-            {concepts.length > 0 && (
-              <ConceptContainer
-                title="Core Concepts"
-                concepts={concepts.map(c => typeof c === 'string' ? c : c.name)}
-                layout="row"
-                style="primary"
-                loading={isProcessing && currentStep === 2}
-                onComplete={handleConceptsComplete}
-                showCompleteButton={currentStep === 2 && !isProcessing}
-              />
-            )}
-
-            {/* Step 3: Multi-Dimensional Characterization */}
-            {Object.keys(characterization).length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(characterization).map(([dimension, suggestions]) => (
-                  <ConceptContainer
-                    key={dimension}
-                    title={`${dimension.charAt(0).toUpperCase() + dimension.slice(1)} Context`}
-                    concepts={Array.isArray(suggestions) ? suggestions : []}
-                    layout="column"
-                    style="secondary"
-                    loading={isProcessing && currentStep === 3}
-                    showRemoveX={true}
-                  />
+          {/* Core Concepts Section - Show after extraction */}
+          {concepts.length > 0 && currentStep >= 2 && (
+            <div className={`bg-white rounded-2xl shadow-lg p-8 border slide-up ${isProcessing && currentStep === 2 ? 'breathing' : ''}`}>
+              <div className="text-xl font-semibold text-gray-800 mb-6">
+                Core Concepts Extracted
+                {isProcessing && currentStep === 2 && (
+                  <div className="inline-block ml-3">
+                    <div className="loading-spinner"></div>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-3 mb-6">
+                {editableConcepts.map((concept, index) => (
+                  <div
+                    key={index}
+                    className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium border border-green-200 group flex items-center"
+                  >
+                    {concept}
+                    <button
+                      onClick={() => handleRemoveConcept(concept)}
+                      className="ml-2 text-green-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
               </div>
-            )}
 
-          </div>
-
-          {/* Sidebar - 1 column */}
-          <div className="space-y-6">
-            
-            {/* Generation Controls */}
-            {Object.keys(characterization).length > 0 && currentStep >= 3 && (
-              <div className="bg-white rounded-lg shadow-sm p-6 border">
-                <h3 className="text-lg font-semibold mb-4">
-                  Generation Controls
-                </h3>
-                <button
-                  onClick={() => setShowGenerationModal(true)}
-                  disabled={isProcessing}
-                  className="w-full bg-primary-600 text-white px-4 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:bg-gray-400"
-                >
-                  Start Generation
-                </button>
-                <div className="text-xs text-gray-500 mt-2">
-                  Generate synthetic data in multiple formats
+              {/* Add new concepts */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm font-medium text-gray-700 mb-3">
+                  Add more concepts (comma-separated):
                 </div>
-              </div>
-            )}
-
-            {/* Instructions */}
-            <div className="bg-gradient-to-br from-primary-50 to-green-50 rounded-lg p-6 border border-primary-200">
-              <h3 className="text-lg font-semibold text-primary-900 mb-3">
-                How it Works
-              </h3>
-              <div className="space-y-3 text-sm text-primary-800">
-                <div className="flex items-start space-x-2">
-                  <span className="font-bold text-primary-600">1.</span>
-                  <span>Enter your text or upload a document</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <span className="font-bold text-primary-600">2.</span>
-                  <span>AI extracts 20-50 core concepts</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <span className="font-bold text-primary-600">3.</span>
-                  <span>5 specialized agents characterize concepts</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <span className="font-bold text-primary-600">4.</span>
-                  <span>Review and customize selections</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <span className="font-bold text-primary-600">5.</span>
-                  <span>Generate synthetic data samples</span>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newConceptText}
+                    onChange={(e) => setNewConceptText(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddConcepts()}
+                    placeholder="concept1, concept2, concept3"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button
+                    onClick={handleAddConcepts}
+                    disabled={!newConceptText.trim()}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                  >
+                    Add
+                  </button>
                 </div>
               </div>
               
-              {currentStep >= 3 && (
-                <div className="mt-4 p-3 bg-primary-100 rounded-lg border border-primary-200">
-                  <div className="text-sm text-primary-800 font-medium mb-1">
-                    Ready for Generation
+              {currentStep === 2 && !isProcessing && (
+                <button
+                  onClick={() => handleConceptsComplete(editableConcepts)}
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Continue to Characterization ({editableConcepts.length} concepts)
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Dimensions Section - Show after characterization */}
+          {Object.keys(characterization).length > 0 && currentStep >= 3 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              {/* Geographic Contexts */}
+              {characterization.geographic && (
+                <div className={`bg-white rounded-2xl shadow-lg p-6 border slide-up ${isProcessing && currentStep === 3 ? 'breathing' : ''}`}>
+                  <div className="text-lg font-semibold text-gray-800 mb-4">
+                    Geographic Contexts
+                    {isProcessing && currentStep === 3 && (
+                      <div className="inline-block ml-2">
+                        <div className="loading-spinner scale-75"></div>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-xs text-primary-700">
-                    Multiple output formats available with quality validation
+                  <div className="space-y-2">
+                    {Array.isArray(characterization.geographic) ? characterization.geographic.map((context, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200 hover:bg-blue-100 transition-colors group flex items-center justify-between"
+                      >
+                        <span>{context}</span>
+                        <button
+                          onClick={() => {/* TODO: implement remove */}}
+                          className="text-blue-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )) : []}
+                  </div>
+                </div>
+              )}
+
+              {/* Linguistic Variations */}
+              {characterization.linguistic && (
+                <div className={`bg-white rounded-2xl shadow-lg p-6 border slide-up ${isProcessing && currentStep === 3 ? 'breathing' : ''}`}>
+                  <div className="text-lg font-semibold text-gray-800 mb-4">
+                    Linguistic Variations
+                    {isProcessing && currentStep === 3 && (
+                      <div className="inline-block ml-2">
+                        <div className="loading-spinner scale-75"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {Array.isArray(characterization.linguistic) ? characterization.linguistic.map((context, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm border border-purple-200 hover:bg-purple-100 transition-colors group flex items-center justify-between"
+                      >
+                        <span>{context}</span>
+                        <button
+                          onClick={() => {/* TODO: implement remove */}}
+                          className="text-purple-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )) : []}
+                  </div>
+                </div>
+              )}
+
+              {/* Cultural References */}
+              {characterization.cultural && (
+                <div className={`bg-white rounded-2xl shadow-lg p-6 border slide-up ${isProcessing && currentStep === 3 ? 'breathing' : ''}`}>
+                  <div className="text-lg font-semibold text-gray-800 mb-4">
+                    Cultural References
+                    {isProcessing && currentStep === 3 && (
+                      <div className="inline-block ml-2">
+                        <div className="loading-spinner scale-75"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {Array.isArray(characterization.cultural) ? characterization.cultural.map((context, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 bg-orange-50 text-orange-700 rounded-lg text-sm border border-orange-200 hover:bg-orange-100 transition-colors group flex items-center justify-between"
+                      >
+                        <span>{context}</span>
+                        <button
+                          onClick={() => {/* TODO: implement remove */}}
+                          className="text-orange-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )) : []}
+                  </div>
+                </div>
+              )}
+
+              {/* Persona Profiles */}
+              {characterization.persona && (
+                <div className={`bg-white rounded-2xl shadow-lg p-6 border slide-up ${isProcessing && currentStep === 3 ? 'breathing' : ''}`}>
+                  <div className="text-lg font-semibold text-gray-800 mb-4">
+                    Persona Profiles
+                    {isProcessing && currentStep === 3 && (
+                      <div className="inline-block ml-2">
+                        <div className="loading-spinner scale-75"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {Array.isArray(characterization.persona) ? characterization.persona.map((context, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200 hover:bg-green-100 transition-colors group flex items-center justify-between"
+                      >
+                        <span>{context}</span>
+                        <button
+                          onClick={() => {/* TODO: implement remove */}}
+                          className="text-green-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )) : []}
+                  </div>
+                </div>
+              )}
+
+              {/* Domain Specializations */}
+              {characterization.domain && (
+                <div className={`bg-white rounded-2xl shadow-lg p-6 border slide-up ${isProcessing && currentStep === 3 ? 'breathing' : ''}`}>
+                  <div className="text-lg font-semibold text-gray-800 mb-4">
+                    Domain Specializations
+                    {isProcessing && currentStep === 3 && (
+                      <div className="inline-block ml-2">
+                        <div className="loading-spinner scale-75"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {Array.isArray(characterization.domain) ? characterization.domain.map((context, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm border border-indigo-200 hover:bg-indigo-100 transition-colors group flex items-center justify-between"
+                      >
+                        <span>{context}</span>
+                        <button
+                          onClick={() => {/* TODO: implement remove */}}
+                          className="text-indigo-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )) : []}
                   </div>
                 </div>
               )}
             </div>
-          </div>
+          )}
+
+          {/* Ready Button - Show only after all dimensions are loaded */}
+          {Object.keys(characterization).length > 0 && currentStep >= 3 && !isProcessing && (
+            <div className="text-center slide-up">
+              <button
+                onClick={() => setShowGenerationModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Ready to Generate Dataset
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

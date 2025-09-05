@@ -1,0 +1,82 @@
+/* Breathing/Pulsing Animations */
+@keyframes breathing {
+    0% { 
+        transform: scale(1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    50% { 
+        transform: scale(1.02);
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+    }
+    100% { 
+        transform: scale(1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+}
+
+@keyframes pulse-border {
+    0% { 
+        border-color: #e5e7eb;
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    50% { 
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.1);
+    }
+    100% { 
+        border-color: #e5e7eb;
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0; 
+        transform: translateY(30px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0;
+    }
+    to { 
+        opacity: 1;
+    }
+}
+
+.breathing {
+    animation: breathing 2s ease-in-out infinite;
+}
+
+.pulsing-border {
+    animation: pulse-border 2s ease-in-out infinite;
+}
+
+.slide-up {
+    animation: slideUp 0.5s ease-out;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Loading spinner */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e2e8f0;
+    border-top: 2px solid #2f855a;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
