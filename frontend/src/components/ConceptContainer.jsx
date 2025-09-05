@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 /**
  * ConceptContainer - Reusable component for displaying concepts
@@ -12,9 +12,33 @@ const ConceptContainer = ({
   showRemoveX = true,
   onToggle = () => {},
   onRemove = () => {},
+  onComplete = () => {},
   loading = false,
+  showCompleteButton = false,
   className = ''
 }) => {
+  const [selectedConcepts, setSelectedConcepts] = useState([])
+
+  const handleConceptClick = (concept) => {
+    if (layout === 'row') {
+      // For core concepts, toggle selection
+      setSelectedConcepts(prev => 
+        prev.includes(concept)
+          ? prev.filter(c => c !== concept)
+          : [...prev, concept]
+      )
+    }
+    onToggle(concept)
+  }
+
+  const handleComplete = () => {
+    if (layout === 'row') {
+      // For core concepts, pass selected concepts
+      onComplete(selectedConcepts.length > 0 ? selectedConcepts : concepts)
+    } else {
+      onComplete(concepts)
+    }
+  }
   const baseClasses = `
     bg-white rounded-lg shadow-sm border transition-all duration-300
     ${loading ? 'animate-pulse' : ''}
@@ -33,11 +57,13 @@ const ConceptContainer = ({
     }
   `;
 
-  const conceptItemClasses = `
+  const getConceptItemClasses = (concept, isSelected = false) => `
     px-3 py-2 rounded-full border cursor-pointer transition-all duration-200
     flex items-center gap-2 text-sm font-medium
     ${style === 'primary' 
-      ? 'bg-green-50 border-green-200 text-green-800 hover:bg-green-100' 
+      ? isSelected
+        ? 'bg-primary-100 border-primary-300 text-primary-900'
+        : 'bg-primary-50 border-primary-200 text-primary-800 hover:bg-primary-100' 
       : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
     }
     hover:shadow-sm transform hover:scale-105
@@ -73,33 +99,48 @@ const ConceptContainer = ({
       {/* Concepts Display */}
       {!loading && concepts.length > 0 && (
         <div className={conceptsContainerClasses}>
-          {concepts.map((concept, index) => (
-            <div
-              key={`${concept}-${index}`}
-              className={conceptItemClasses}
-              onClick={() => onToggle(concept)}
-            >
-              <span>{concept}</span>
-              {showRemoveX && (
-                <button
-                  className={removeButtonClasses}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(concept);
-                  }}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          ))}
+          {concepts.map((concept, index) => {
+            const isSelected = layout === 'row' && selectedConcepts.includes(concept)
+            return (
+              <div
+                key={`${concept}-${index}`}
+                className={getConceptItemClasses(concept, isSelected)}
+                onClick={() => handleConceptClick(concept)}
+              >
+                <span>{concept}</span>
+                {showRemoveX && (
+                  <button
+                    className={removeButtonClasses}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove(concept);
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Complete Button */}
+      {showCompleteButton && !loading && concepts.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={handleComplete}
+            className="w-full bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium"
+          >
+            Continue with {layout === 'row' && selectedConcepts.length > 0 ? selectedConcepts.length : concepts.length} concepts
+          </button>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && concepts.length === 0 && (
         <div className="text-center py-6 text-gray-500">
-          <div className="text-2xl mb-2">🎯</div>
+          <div className="text-2xl mb-2">•</div>
           <p>No concepts available yet</p>
         </div>
       )}

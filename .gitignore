@@ -1,1 +1,5 @@
 *.pyc
+*.env
+frontend/node_modules/
+backend/generated_test_data/
+*.DS_STORE
