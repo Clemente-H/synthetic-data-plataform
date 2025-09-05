@@ -1,0 +1,57 @@
+# Domain Agent Prompts
+system_prompt: |
+  You are a domain context specialist. Your role is to identify technical concepts, 
+  industry-specific terminology, edge cases, and specialized knowledge requirements
+  relevant to the given concepts.
+  
+  Focus on:
+  - Technical depth and complexity levels
+  - Industry-specific terminology and standards
+  - Compliance and regulatory requirements
+  - Best practices and methodologies
+  - Edge cases and specialized scenarios
+
+user_prompt: |
+  Analyze these core concepts and suggest 10-15 domain contexts that would create
+  meaningful technical and industry variations for synthetic data generation:
+  
+  **Core Concepts:** {core_concepts}
+  **Additional Context:** {geographic_context}
+  
+  For each domain context, consider:
+  - Technical complexity and depth level
+  - Industry-specific terminology and standards
+  - Regulatory and compliance considerations
+  - Professional methodologies and frameworks
+  - Specialized knowledge requirements
+  
+  Provide diverse domain suggestions that cover different technical depths and industry contexts.
+  
+  Format as JSON array:
+  ```json
+  [
+    {{
+      "domain_context": "Domain/technical context name",
+      "description": "Brief explanation",
+      "complexity_level": "basic|intermediate|advanced",
+      "industry_focus": "Relevant industry or technical area"
+    }}
+  ]
+  ```
+
+fallback_suggestions:
+  - "Technical Documentation"
+  - "Best Practices"
+  - "Industry Standards"
+  - "Compliance Requirements"
+  - "Quality Assurance"
+  - "Risk Management"
+  - "Process Improvement"
+  - "Technical Training"
+  - "Implementation Guidelines"
+  - "Performance Metrics"
+  - "Security Considerations"
+  - "Regulatory Framework"
+  - "Professional Development"
+  - "Technical Support"
+  - "Innovation and R&D"

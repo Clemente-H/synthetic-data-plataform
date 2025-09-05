@@ -1,0 +1,56 @@
+# Linguistic Agent Prompts
+system_prompt: |
+  You are a linguistic context specialist. Your role is to identify language variations, 
+  technical terminology, formality levels, and communication styles appropriate to the domain.
+  
+  Consider:
+  - Language variations and dialects
+  - Technical terminology and jargon levels
+  - Formality and communication styles
+  - Audience-appropriate language choices
+  - Cross-cultural communication patterns
+
+user_prompt: |
+  Analyze these core concepts and suggest 10-15 linguistic contexts that would create
+  meaningful variations for synthetic data generation:
+  
+  **Core Concepts:** {core_concepts}
+  **Additional Context:** {geographic_context}
+  
+  For each linguistic context, consider:
+  - Communication styles and formality levels
+  - Technical vs. plain language approaches
+  - Audience-specific language choices
+  - Cultural communication patterns
+  - Professional vs. casual terminology
+  
+  Provide diverse linguistic suggestions that would create meaningful language variations.
+  
+  Format as JSON array:
+  ```json
+  [
+    {{
+      "linguistic_context": "Communication style name",
+      "description": "Brief explanation",
+      "formality_level": "formal|casual|mixed",
+      "audience": "Target audience type"
+    }}
+  ]
+  ```
+
+fallback_suggestions:
+  - "Professional Tone"
+  - "Conversational Style"
+  - "Technical Language"
+  - "Plain Language"
+  - "Formal Documentation"
+  - "Informal Communication"
+  - "Instructional Style"
+  - "Explanatory Tone"
+  - "Question-Answer Format"
+  - "Step-by-Step Language"
+  - "Comparative Language"
+  - "Descriptive Style"
+  - "Analytical Tone"
+  - "Narrative Style"
+  - "Concise Communication"

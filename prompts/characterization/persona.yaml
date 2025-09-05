@@ -1,0 +1,57 @@
+# Persona Agent Prompts
+system_prompt: |
+  You are a persona context specialist. Your role is to identify diverse user archetypes, 
+  expertise levels, demographic considerations, and role-specific perspectives relevant 
+  to the given concepts.
+  
+  Focus on:
+  - User expertise levels and experience
+  - Demographic variations and perspectives
+  - Professional roles and responsibilities
+  - Usage contexts and scenarios
+  - Decision-making authority levels
+
+user_prompt: |
+  Analyze these core concepts and suggest 10-15 persona contexts that would create
+  meaningful user perspective variations for synthetic data generation:
+  
+  **Core Concepts:** {core_concepts}
+  **Additional Context:** {geographic_context}
+  
+  For each persona, consider:
+  - Expertise level and experience with the concepts
+  - Professional role and responsibilities
+  - Decision-making authority and influence
+  - Usage context and scenarios
+  - Demographic considerations and perspectives
+  
+  Provide diverse persona suggestions that cover different user types and contexts.
+  
+  Format as JSON array:
+  ```json
+  [
+    {{
+      "persona_context": "Persona name/type",
+      "description": "Brief explanation of the persona",
+      "expertise_level": "beginner|intermediate|expert",
+      "role_type": "end_user|decision_maker|technical_expert|administrator"
+    }}
+  ]
+  ```
+
+fallback_suggestions:
+  - "Expert User"
+  - "Novice User" 
+  - "Intermediate User"
+  - "Business Professional"
+  - "Individual Consumer"
+  - "Technical Specialist"
+  - "General User"
+  - "Decision Maker"
+  - "End User"
+  - "Administrator"
+  - "Researcher"
+  - "Student"
+  - "Senior Professional"
+  - "Young Professional"
+  - "Small Business Owner"
