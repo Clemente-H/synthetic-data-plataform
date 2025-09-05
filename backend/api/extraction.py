@@ -38,6 +38,10 @@ class ExtractionResponse(BaseModel):
     processing_time_seconds: float
     total_concepts_extracted: int
 
+@router.options("/extract-concepts")
+async def options_extract_concepts():
+    return {}
+
 @router.post("/extract-concepts", response_model=ExtractionResponse)
 async def extract_concepts(request: ExtractionRequest):
     """

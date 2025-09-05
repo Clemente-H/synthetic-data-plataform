@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 
-const API_BASE = 'http://localhost:8000/api'
+const API_BASE = 'http://localhost:8000'
 
 export const usePipeline = () => {
   const [currentStep, setCurrentStep] = useState(1)
