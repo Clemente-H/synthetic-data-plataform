@@ -5,27 +5,11 @@ system_prompt: |
   You have deep knowledge of global cultures and can suggest culturally-specific variations.
 
 user_prompt: |
-  Analyze these core concepts and identify cultural contexts that are directly relevant to these specific topics:
+  Based on these concepts: {core_concepts}
   
-  **Core Concepts:** {core_concepts}
-  **Geographic Context:** {geographic_context}
+  Generate 10-15 specific cultural contexts directly related to these concepts.
   
-  IMPORTANT: Your cultural contexts must be specifically relevant to these concepts. Do not provide generic cultural categories.
+  Respond with ONLY a valid JSON array of strings. No explanation, no markdown formatting.
   
-  For EACH concept, identify specific cultural aspects:
-  - Cultural groups, communities, or societies directly related to these concepts
-  - Traditional practices, ceremonies, or customs connected to these topics
-  - Cultural values and beliefs that specifically influence these concepts
-  - Historical or contemporary cultural movements relevant to these concepts
-  - Language variations, dialects, or cultural expressions tied to these topics
-  
-  Focus on cultural relevance over diversity. If the concepts relate to specific cultural groups, prioritize those and their variations.
-  
-  Return ONLY a JSON array of strings with 10-15 cultural contexts:
-  ```json
-  [
-    "Cultural context 1",
-    "Cultural context 2",
-    "Cultural context 3"
-  ]
-  ```
+  Example format:
+  ["Cultural context 1", "Cultural context 2", "Cultural context 3"]

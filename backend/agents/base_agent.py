@@ -43,28 +43,37 @@ class BaseAgent(ABC):
         """
         Generate suggestions using LLM - no fallbacks, proper error handling
         """
-        # Get formatted prompt for this agent
-        prompt_data = self.prompt_loader.get_characterization_prompt(
-            self.agent_type, 
-            core_concepts, 
-            additional_context or {}
-        )
-        
-        # Generate with appropriate model
-        response = await self.client.generate(
-            prompt=prompt_data['user'],
-            system_prompt=prompt_data['system'],
-            task_type='characterization'
-        )
-        
-        # Parse JSON response - if it fails, raise error
-        suggestions = self._extract_suggestions_from_response(response, max_suggestions)
-        
-        if not suggestions:
-            raise Exception(f"LLM failed to generate valid JSON for {self.__class__.__name__}")
-        
-        logger.info(f"{self.__class__.__name__} generated {len(suggestions)} suggestions from LLM")
-        return suggestions
+        try:
+            # Get formatted prompt for this agent
+            prompt_data = self.prompt_loader.get_characterization_prompt(
+                self.agent_type, 
+                core_concepts, 
+                additional_context or {}
+            )
+            
+            # Generate with appropriate model
+            response = await self.client.generate(
+                prompt=prompt_data['user'],
+                system_prompt=prompt_data['system'],
+                task_type='characterization'
+            )
+            
+            logger.info(f"{self.__class__.__name__} received response length: {len(response)}")
+            logger.debug(f"{self.__class__.__name__} raw response: {response[:300]}...")
+            
+            # Parse JSON response - if it fails, raise error
+            suggestions = self._extract_suggestions_from_response(response, max_suggestions)
+            
+            if not suggestions:
+                logger.error(f"{self.__class__.__name__} - No suggestions extracted from response")
+                raise Exception(f"LLM failed to generate valid JSON for {self.__class__.__name__}")
+            
+            logger.info(f"{self.__class__.__name__} generated {len(suggestions)} suggestions from LLM")
+            return suggestions
+            
+        except Exception as e:
+            logger.error(f"{self.__class__.__name__} error: {str(e)}")
+            raise e
     
     def _extract_suggestions_from_response(self, response: str, max_suggestions: int = 15) -> List[str]:
         """

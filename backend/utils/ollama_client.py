@@ -112,7 +112,7 @@ class OllamaClient:
     
     def extract_json_from_response(self, response: str) -> Optional[str]:
         """
-        Extract JSON content from LLM response with improved patterns
+        Extract JSON content from LLM response with maximum flexibility
         """
         import re
         
@@ -126,19 +126,30 @@ class OllamaClient:
         if json_match:
             return json_match.group(1).strip()
         
-        # Try to find JSON directly (starts with [ or {) - more flexible
-        json_match = re.search(r'([\[\{][^\[\{]*?[\]\}])', response, re.DOTALL)
-        if json_match:
-            result = json_match.group(1).strip()
-            # Basic validation - must have balanced brackets
-            if result.count('[') == result.count(']') and result.count('{') == result.count('}'):
-                return result
+        # Try to find complete JSON arrays or objects
+        patterns = [
+            # Complete array with balanced brackets
+            r'(\[(?:[^[\]]*|\[[^\]]*\])*\])',
+            # Complete object with balanced braces  
+            r'(\{(?:[^{}]*|\{[^}]*\})*\})',
+            # More lenient array pattern
+            r'\[\s*"([^"]+)"(?:\s*,\s*"([^"]+)")*\s*\]',
+            # Array with quoted strings, allowing newlines
+            r'\[\s*(?:"[^"]*"\s*,?\s*)+\]'
+        ]
         
-        # Try to find incomplete JSON and complete it
-        incomplete_match = re.search(r'\[\s*\{\s*"[^"]+"\s*:\s*"[^"]*"', response, re.DOTALL)
-        if incomplete_match:
-            # This catches partial JSON - we'll let the parser try to fix it
-            return incomplete_match.group(0).strip()
+        for pattern in patterns:
+            matches = re.findall(pattern, response, re.DOTALL)
+            if matches:
+                candidate = matches[0] if isinstance(matches[0], str) else matches[0][0] if matches[0] else None
+                if candidate and candidate.strip():
+                    return candidate.strip()
+        
+        # Try to find and extract individual quoted strings in an array-like format
+        string_matches = re.findall(r'"([^"]+)"', response)
+        if len(string_matches) >= 3:  # At least 3 items for a reasonable suggestion list
+            # Reconstruct as JSON array
+            return '[' + ', '.join([f'"{item}"' for item in string_matches[:15]]) + ']'
         
         return None
     
@@ -146,6 +157,8 @@ class OllamaClient:
         """
         Parse JSON from LLM response with improved error handling
         """
+        import re
+        
         json_text = self.extract_json_from_response(response)
         if json_text:
             try:
@@ -157,11 +170,17 @@ class OllamaClient:
                 # Try multiple fixes
                 fixes_to_try = [
                     # Fix quotes and booleans
-                    json_text.replace("'", '"').replace('True', 'true').replace('False', 'false'),
+                    json_text.replace("'", '"').replace('True', 'true').replace('False', 'false').replace('None', 'null'),
+                    # Remove trailing commas
+                    re.sub(r',\s*([}\]])', r'\1', json_text),
                     # Try to wrap partial JSON in array
                     f"[{json_text}]" if not json_text.strip().startswith(('[', '{')) else json_text,
+                    # Try to complete incomplete JSON arrays
+                    json_text + ']' if json_text.count('[') > json_text.count(']') else json_text,
                     # Try to complete incomplete JSON objects
-                    json_text + '}]' if json_text.count('{') > json_text.count('}') else json_text,
+                    json_text + '}' if json_text.count('{') > json_text.count('}') else json_text,
+                    # Combined fixes
+                    re.sub(r',\s*([}\]])', r'\1', json_text.replace("'", '"').replace('True', 'true').replace('False', 'false')),
                 ]
                 
                 for i, fixed_json in enumerate(fixes_to_try):

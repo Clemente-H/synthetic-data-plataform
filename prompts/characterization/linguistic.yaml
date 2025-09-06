@@ -11,27 +11,11 @@ system_prompt: |
   - Cross-cultural communication patterns
 
 user_prompt: |
-  Analyze these core concepts and identify linguistic contexts that are directly relevant to these specific topics:
+  Based on these concepts: {core_concepts}
   
-  **Core Concepts:** {core_concepts}
-  **Additional Context:** {geographic_context}
+  Generate 10-15 specific linguistic contexts directly related to these concepts.
   
-  IMPORTANT: Your linguistic contexts must be specifically relevant to these concepts. Do not provide generic language styles.
+  Respond with ONLY a valid JSON array of strings. No explanation, no markdown formatting.
   
-  For EACH concept, identify specific linguistic aspects:
-  - Languages, dialects, or language variants directly associated with these concepts
-  - Technical terminology, specialized vocabulary, or jargon specific to these topics
-  - Communication styles unique to the communities or domains of these concepts
-  - Traditional or ceremonial language patterns related to these concepts
-  - Oral tradition, storytelling, or narrative styles connected to these topics
-  
-  Focus on linguistic relevance over variety. If the concepts relate to specific languages or communities, prioritize those linguistic contexts.
-  
-  Return ONLY a JSON array of strings with 10-15 linguistic contexts:
-  ```json
-  [
-    "Linguistic context 1",
-    "Linguistic context 2",
-    "Linguistic context 3"
-  ]
-  ```
+  Example format:
+  ["Linguistic context 1", "Linguistic context 2", "Linguistic context 3"]
