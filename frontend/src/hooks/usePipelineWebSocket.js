@@ -350,6 +350,7 @@ export const usePipelineWebSocket = () => {
     characterization,
     setCharacterization,
     generatedSamples,
+    setGeneratedSamples,
     finalResults,
     
     // Real-time progress

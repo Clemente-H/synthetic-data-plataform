@@ -34,15 +34,20 @@ const GenerationModal = ({ onClose, onGenerate, concepts, characterization }) =>
   const handleGenerate = async () => {
     setIsGenerating(true)
     try {
+      const totalSamples = Object.values(samplesConfig).reduce((sum, val) => sum + val, 0)
+      
       await onGenerate({
         format_type: selectedFormat,
         samples_per_combination: 3,
-        max_total_samples: updateEstimate(),
-        samples_config: samplesConfig
+        max_total_samples: totalSamples,
+        // Pass individual samples config as metadata (not used by backend yet)
+        _metadata: { samples_config: samplesConfig }
       })
-    } finally {
+    } catch (error) {
+      console.error('Generation failed:', error)
       setIsGenerating(false)
     }
+    // Don't set isGenerating false here - let the parent handle modal close
   }
 
   return (

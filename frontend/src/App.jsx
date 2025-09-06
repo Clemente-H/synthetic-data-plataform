@@ -15,6 +15,7 @@ function App() {
     characterization,
     setCharacterization,
     generatedSamples,
+    setGeneratedSamples,
     currentStage,
     overallProgress,
     inputText,
@@ -86,12 +87,25 @@ function App() {
   }, [setCharacterization])
 
   const handleGenerationStart = useCallback(async (config) => {
-    await runFullPipeline({
+    // Prepare the configuration for the backend
+    const pipelineConfig = {
       input_text: inputText,
-      ...config
-    })
-    setShowGenerationModal(false)
-  }, [runFullPipeline, inputText])
+      format_type: config.format_type || 'qa',
+      samples_per_combination: config.samples_per_combination || 3,
+      max_total_samples: config.max_total_samples || 100,
+      max_concepts: editableConcepts.length || concepts.length || 30
+    }
+    
+    console.log('🚀 Starting generation with config:', pipelineConfig)
+    
+    try {
+      await runFullPipeline(pipelineConfig)
+      setShowGenerationModal(false)
+    } catch (error) {
+      console.error('❌ Generation failed:', error)
+      // Keep modal open on error so user can retry
+    }
+  }, [runFullPipeline, inputText, editableConcepts, concepts])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -374,8 +388,8 @@ function App() {
             </div>
           )}
 
-          {/* Ready Button - Show only after all dimensions are loaded */}
-          {Object.keys(characterization).length > 0 && currentStep >= 3 && !isProcessing && (
+          {/* Ready Button - Show only after all dimensions are loaded and no results yet */}
+          {Object.keys(characterization).length > 0 && currentStep >= 3 && !isProcessing && generatedSamples.length === 0 && (
             <div className="text-center slide-up">
               <button
                 onClick={() => setShowGenerationModal(true)}
@@ -383,6 +397,87 @@ function App() {
               >
                 Ready to Generate Dataset
               </button>
+            </div>
+          )}
+
+          {/* Results Section - Show after generation complete */}
+          {generatedSamples.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-lg p-8 border slide-up">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    ✨ Generation Complete!
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    Successfully generated {generatedSamples.length} synthetic samples
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const dataStr = JSON.stringify(generatedSamples, null, 2)
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+                    const url = URL.createObjectURL(dataBlob)
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.download = `synthetic-dataset-${new Date().toISOString().slice(0, 10)}.json`
+                    link.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center"
+                >
+                  📥 Download Dataset
+                </button>
+              </div>
+
+              {/* Sample Preview */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <h3 className="font-semibold text-gray-800 mb-3">Sample Preview:</h3>
+                <div className="bg-white rounded border p-3 text-sm font-mono max-h-40 overflow-y-auto">
+                  {JSON.stringify(generatedSamples[0], null, 2)}
+                </div>
+              </div>
+
+              {/* Generation Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-green-700">{generatedSamples.length}</div>
+                  <div className="text-sm text-green-600">Total Samples</div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-blue-700">{concepts.length}</div>
+                  <div className="text-sm text-blue-600">Concepts Used</div>
+                </div>
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-purple-700">{Object.keys(characterization).length}</div>
+                  <div className="text-sm text-purple-600">Dimensions</div>
+                </div>
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-orange-700">
+                    {((generatedSamples.length > 0 ? JSON.stringify(generatedSamples).length : 0) / 1024).toFixed(1)}KB
+                  </div>
+                  <div className="text-sm text-orange-600">Dataset Size</div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-center mt-6 space-x-4">
+                <button
+                  onClick={() => {
+                    // Reset to generate again
+                    setGeneratedSamples([])
+                    setShowGenerationModal(true)
+                  }}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Generate More
+                </button>
+                <button
+                  onClick={reset}
+                  className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                >
+                  Start Over
+                </button>
+              </div>
             </div>
           )}
         </div>
