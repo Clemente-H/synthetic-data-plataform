@@ -13,6 +13,7 @@ function App() {
     error,
     concepts,
     characterization,
+    setCharacterization,
     generatedSamples,
     currentStage,
     overallProgress,
@@ -73,6 +74,16 @@ function App() {
   const handleRemoveConcept = useCallback((conceptToRemove) => {
     setEditableConcepts(prev => prev.filter(c => c !== conceptToRemove))
   }, [])
+
+  const handleRemoveDimensionContext = useCallback((dimension, contextToRemove) => {
+    setCharacterization(prev => {
+      const updated = { ...prev }
+      if (updated[dimension]) {
+        updated[dimension] = updated[dimension].filter(context => context !== contextToRemove)
+      }
+      return updated
+    })
+  }, [setCharacterization])
 
   const handleGenerationStart = useCallback(async (config) => {
     await runFullPipeline({
@@ -174,7 +185,7 @@ function App() {
                       >
                         <span>{context}</span>
                         <button
-                          onClick={() => {/* TODO: implement remove */}}
+                          onClick={() => handleRemoveDimensionContext('geographic', context)}
                           className="text-blue-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
@@ -204,7 +215,7 @@ function App() {
                       >
                         <span>{context}</span>
                         <button
-                          onClick={() => {/* TODO: implement remove */}}
+                          onClick={() => handleRemoveDimensionContext('linguistic', context)}
                           className="text-purple-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
@@ -234,7 +245,7 @@ function App() {
                       >
                         <span>{context}</span>
                         <button
-                          onClick={() => {/* TODO: implement remove */}}
+                          onClick={() => handleRemoveDimensionContext('cultural', context)}
                           className="text-orange-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
@@ -264,7 +275,7 @@ function App() {
                       >
                         <span>{context}</span>
                         <button
-                          onClick={() => {/* TODO: implement remove */}}
+                          onClick={() => handleRemoveDimensionContext('persona', context)}
                           className="text-green-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
@@ -294,7 +305,7 @@ function App() {
                       >
                         <span>{context}</span>
                         <button
-                          onClick={() => {/* TODO: implement remove */}}
+                          onClick={() => handleRemoveDimensionContext('domain', context)}
                           className="text-indigo-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×

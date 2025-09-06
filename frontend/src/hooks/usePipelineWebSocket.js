@@ -348,6 +348,7 @@ export const usePipelineWebSocket = () => {
     // Pipeline data
     concepts,
     characterization,
+    setCharacterization,
     generatedSamples,
     finalResults,
     
