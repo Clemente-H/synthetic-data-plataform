@@ -112,9 +112,8 @@ class OllamaClient:
     
     def extract_json_from_response(self, response: str) -> Optional[str]:
         """
-        Extract JSON content from LLM response
+        Extract JSON content from LLM response with maximum flexibility
         """
-        # Look for JSON blocks
         import re
         
         # Try to find JSON between ```json and ```
@@ -127,29 +126,72 @@ class OllamaClient:
         if json_match:
             return json_match.group(1).strip()
         
-        # Try to find JSON directly (starts with [ or {)
-        json_match = re.search(r'([\[\{].*?[\]\}])', response, re.DOTALL)
-        if json_match:
-            return json_match.group(1).strip()
+        # Try to find complete JSON arrays or objects
+        patterns = [
+            # Complete array with balanced brackets
+            r'(\[(?:[^[\]]*|\[[^\]]*\])*\])',
+            # Complete object with balanced braces  
+            r'(\{(?:[^{}]*|\{[^}]*\})*\})',
+            # More lenient array pattern
+            r'\[\s*"([^"]+)"(?:\s*,\s*"([^"]+)")*\s*\]',
+            # Array with quoted strings, allowing newlines
+            r'\[\s*(?:"[^"]*"\s*,?\s*)+\]'
+        ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, response, re.DOTALL)
+            if matches:
+                candidate = matches[0] if isinstance(matches[0], str) else matches[0][0] if matches[0] else None
+                if candidate and candidate.strip():
+                    return candidate.strip()
+        
+        # Try to find and extract individual quoted strings in an array-like format
+        string_matches = re.findall(r'"([^"]+)"', response)
+        if len(string_matches) >= 3:  # At least 3 items for a reasonable suggestion list
+            # Reconstruct as JSON array
+            return '[' + ', '.join([f'"{item}"' for item in string_matches[:15]]) + ']'
         
         return None
     
     def parse_json_response(self, response: str) -> Optional[Dict[str, Any]]:
         """
-        Parse JSON from LLM response
+        Parse JSON from LLM response with improved error handling
         """
+        import re
+        
         json_text = self.extract_json_from_response(response)
         if json_text:
             try:
                 return json.loads(json_text)
             except json.JSONDecodeError as e:
                 logger.warning(f"JSON decode error: {e}")
-                # Try to fix common JSON issues
-                fixed_json = json_text.replace("'", '"').replace('True', 'true').replace('False', 'false')
-                try:
-                    return json.loads(fixed_json)
-                except json.JSONDecodeError:
-                    logger.error("Could not parse JSON even after fixes")
+                logger.warning(f"Problematic JSON text: {json_text[:200]}...")
+                
+                # Try multiple fixes
+                fixes_to_try = [
+                    # Fix quotes and booleans
+                    json_text.replace("'", '"').replace('True', 'true').replace('False', 'false').replace('None', 'null'),
+                    # Remove trailing commas
+                    re.sub(r',\s*([}\]])', r'\1', json_text),
+                    # Try to wrap partial JSON in array
+                    f"[{json_text}]" if not json_text.strip().startswith(('[', '{')) else json_text,
+                    # Try to complete incomplete JSON arrays
+                    json_text + ']' if json_text.count('[') > json_text.count(']') else json_text,
+                    # Try to complete incomplete JSON objects
+                    json_text + '}' if json_text.count('{') > json_text.count('}') else json_text,
+                    # Combined fixes
+                    re.sub(r',\s*([}\]])', r'\1', json_text.replace("'", '"').replace('True', 'true').replace('False', 'false')),
+                ]
+                
+                for i, fixed_json in enumerate(fixes_to_try):
+                    try:
+                        result = json.loads(fixed_json)
+                        logger.info(f"JSON parsed successfully with fix #{i+1}")
+                        return result
+                    except json.JSONDecodeError:
+                        continue
+                
+                logger.error("Could not parse JSON even after all fixes")
         
         return None
     

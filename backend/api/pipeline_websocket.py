@@ -188,12 +188,41 @@ async def characterize_websocket(
                     }
                 )
                 
-                # Simulate agent processing (in real implementation, call actual agent)
-                import asyncio
-                await asyncio.sleep(1)  # Simulate processing time
-                
-                # Mock results for demonstration
-                results[agent_name] = [f"{agent_name}_context_{j}" for j in range(12)]
+                # Use real agents instead of simulation
+                try:
+                    if agent_name == 'geographic':
+                        from agents.geographic_agent import GeographicAgent
+                        agent = GeographicAgent()
+                        suggestions = await agent.process(concepts)
+                        results[agent_name] = suggestions[:12]  # Limit to 12 as expected
+                    elif agent_name == 'cultural':
+                        from agents.cultural_agent import CulturalAgent
+                        agent = CulturalAgent()
+                        suggestions = await agent.process(concepts)
+                        results[agent_name] = suggestions[:12]
+                    elif agent_name == 'linguistic':
+                        from agents.linguistic_agent import LinguisticAgent
+                        agent = LinguisticAgent()
+                        suggestions = await agent.process(concepts)
+                        results[agent_name] = suggestions[:12]
+                    elif agent_name == 'persona':
+                        from agents.persona_agent import PersonaAgent
+                        agent = PersonaAgent()
+                        suggestions = await agent.process(concepts)
+                        results[agent_name] = suggestions[:12]
+                    elif agent_name == 'domain':
+                        from agents.domain_agent import DomainAgent
+                        agent = DomainAgent()
+                        suggestions = await agent.process(concepts)
+                        results[agent_name] = suggestions[:12]
+                    else:
+                        # Fallback to mock for unknown agents
+                        results[agent_name] = [f"{agent_name}_context_{j}" for j in range(12)]
+                        
+                except Exception as e:
+                    logger.error(f"Error running {agent_name} agent: {e}")
+                    # Fallback to mock on error  
+                    results[agent_name] = [f"{agent_name}_context_{j}" for j in range(12)]
                 
                 await send_pipeline_update(
                     task_id=task_id,

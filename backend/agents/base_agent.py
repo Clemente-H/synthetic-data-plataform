@@ -41,7 +41,7 @@ class BaseAgent(ABC):
                                   additional_context: Dict[str, List[str]] = None,
                                   max_suggestions: int = 15) -> List[str]:
         """
-        Common method to generate suggestions using prompts
+        Generate suggestions using LLM - no fallbacks, proper error handling
         """
         try:
             # Get formatted prompt for this agent
@@ -58,78 +58,62 @@ class BaseAgent(ABC):
                 task_type='characterization'
             )
             
-            # Try to parse JSON response
+            logger.info(f"{self.__class__.__name__} received response length: {len(response)}")
+            logger.debug(f"{self.__class__.__name__} raw response: {response[:300]}...")
+            
+            # Parse JSON response - if it fails, raise error
             suggestions = self._extract_suggestions_from_response(response, max_suggestions)
             
             if not suggestions:
-                # Use fallback suggestions
-                suggestions = self._get_fallback_suggestions()
+                logger.error(f"{self.__class__.__name__} - No suggestions extracted from response")
+                raise Exception(f"LLM failed to generate valid JSON for {self.__class__.__name__}")
             
-            logger.info(f"{self.__class__.__name__} generated {len(suggestions)} suggestions")
+            logger.info(f"{self.__class__.__name__} generated {len(suggestions)} suggestions from LLM")
             return suggestions
             
         except Exception as e:
-            logger.error(f"Error in {self.__class__.__name__}: {e}")
-            return self._get_fallback_suggestions()
+            logger.error(f"{self.__class__.__name__} error: {str(e)}")
+            raise e
     
     def _extract_suggestions_from_response(self, response: str, max_suggestions: int = 15) -> List[str]:
         """
-        Extract suggestions from LLM response
+        Extract suggestions from LLM JSON response - strict parsing only
         """
-        # Try to parse as JSON first
+        # Parse JSON response
         json_data = self.client.parse_json_response(response)
         
-        if json_data:
-            suggestions = []
-            
-            # Handle different JSON formats
-            if isinstance(json_data, list):
-                # Direct list of suggestions
-                for item in json_data:
-                    if isinstance(item, str):
-                        suggestions.append(item.strip())
-                    elif isinstance(item, dict) and 'cultural_context' in item:
-                        suggestions.append(item['cultural_context'].strip())
-                    elif isinstance(item, dict) and any(key in item for key in ['suggestion', 'context', 'name']):
-                        # Extract from various possible keys
-                        for key in ['suggestion', 'context', 'name', 'geographic_context']:
-                            if key in item and item[key]:
-                                suggestions.append(str(item[key]).strip())
-                                break
-            
-            # Filter and limit suggestions
-            suggestions = [s for s in suggestions if s and len(s.strip()) > 2]
-            return suggestions[:max_suggestions]
+        if not json_data:
+            logger.error(f"No valid JSON found in response: {response[:200]}...")
+            return []
         
-        # If JSON parsing fails, try to extract from text
-        return self._extract_from_text(response, max_suggestions)
-    
-    def _extract_from_text(self, response: str, max_suggestions: int = 15) -> List[str]:
-        """
-        Extract suggestions from plain text response
-        """
-        lines = response.split('\n')
         suggestions = []
         
-        for line in lines:
-            line = line.strip()
-            # Look for bullet points, numbers, or clean text
-            if line and (line.startswith('-') or line.startswith('*') or 
-                        line.startswith(tuple('123456789')) or 
-                        (len(line) > 3 and len(line) < 100)):
-                # Clean up the line
-                cleaned = line.lstrip('-*0123456789. ').strip()
-                if cleaned and len(cleaned) > 2:
-                    suggestions.append(cleaned)
+        # Expect array of strings: ["item1", "item2", "item3"]
+        if isinstance(json_data, list):
+            for item in json_data:
+                if isinstance(item, str) and item.strip():
+                    suggestions.append(item.strip())
+                elif isinstance(item, dict):
+                    # For dict format, extract the main context value
+                    context_key = f"{self.agent_type}_context"
+                    if context_key in item and item[context_key]:
+                        suggestions.append(str(item[context_key]).strip())
         
-        return suggestions[:max_suggestions]
+        # Or expect dict with agent-specific key: {"cultural": ["item1", "item2"]}
+        elif isinstance(json_data, dict):
+            if self.agent_type in json_data and isinstance(json_data[self.agent_type], list):
+                suggestions = [str(item).strip() for item in json_data[self.agent_type] if str(item).strip()]
+        
+        # Filter valid suggestions
+        valid_suggestions = [s for s in suggestions if s and len(s) > 2]
+        
+        if valid_suggestions:
+            logger.info(f"Extracted {len(valid_suggestions)} valid suggestions from LLM JSON")
+            return valid_suggestions[:max_suggestions]
+        
+        logger.error(f"No valid suggestions found in JSON: {json_data}")
+        return []
     
-    @abstractmethod
-    def _get_fallback_suggestions(self) -> List[str]:
-        """
-        Return fallback suggestions if AI generation fails
-        """
-        pass
     
     def validate_suggestions(self, suggestions: List[str]) -> List[str]:
         """

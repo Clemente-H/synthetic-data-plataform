@@ -11,46 +11,11 @@ system_prompt: |
   - Cross-cultural communication patterns
 
 user_prompt: |
-  Analyze these core concepts and suggest 10-15 linguistic contexts that would create
-  meaningful variations for synthetic data generation:
+  Based on these concepts: {core_concepts}
   
-  **Core Concepts:** {core_concepts}
-  **Additional Context:** {geographic_context}
+  Generate 10-15 specific linguistic contexts directly related to these concepts.
   
-  For each linguistic context, consider:
-  - Communication styles and formality levels
-  - Technical vs. plain language approaches
-  - Audience-specific language choices
-  - Cultural communication patterns
-  - Professional vs. casual terminology
+  Respond with ONLY a valid JSON array of strings. No explanation, no markdown formatting.
   
-  Provide diverse linguistic suggestions that would create meaningful language variations.
-  
-  Format as JSON array:
-  ```json
-  [
-    {{
-      "linguistic_context": "Communication style name",
-      "description": "Brief explanation",
-      "formality_level": "formal|casual|mixed",
-      "audience": "Target audience type"
-    }}
-  ]
-  ```
-
-fallback_suggestions:
-  - "Professional Tone"
-  - "Conversational Style"
-  - "Technical Language"
-  - "Plain Language"
-  - "Formal Documentation"
-  - "Informal Communication"
-  - "Instructional Style"
-  - "Explanatory Tone"
-  - "Question-Answer Format"
-  - "Step-by-Step Language"
-  - "Comparative Language"
-  - "Descriptive Style"
-  - "Analytical Tone"
-  - "Narrative Style"
-  - "Concise Communication"
+  Example format:
+  ["Linguistic context 1", "Linguistic context 2", "Linguistic context 3"]
