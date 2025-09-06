@@ -357,6 +357,20 @@ class PipelineOrchestrator:
                     task_type='generation'
                 )
                 
+                # DEBUG: Save raw LLM response to file
+                combo_id = combo.get('combination_id', 'unknown')
+                debug_filename = f"debug_generation_{combo_id}.txt"
+                try:
+                    with open(debug_filename, 'w', encoding='utf-8') as f:
+                        f.write(f"=== PROMPT ===\n")
+                        f.write(f"System: {template_data.get('system', 'N/A')}\n\n")
+                        f.write(f"User: {template_data['user']}\n\n")
+                        f.write(f"=== LLM RESPONSE ===\n")
+                        f.write(response)
+                    logger.info(f"💾 Saved raw LLM response to {debug_filename}")
+                except Exception as save_error:
+                    logger.warning(f"Failed to save debug file: {save_error}")
+                
                 # Parse and add samples
                 parsed_samples = self._parse_generation_response(response, combo)
                 generated_samples.extend(parsed_samples)
