@@ -112,9 +112,8 @@ class OllamaClient:
     
     def extract_json_from_response(self, response: str) -> Optional[str]:
         """
-        Extract JSON content from LLM response
+        Extract JSON content from LLM response with improved patterns
         """
-        # Look for JSON blocks
         import re
         
         # Try to find JSON between ```json and ```
@@ -127,10 +126,19 @@ class OllamaClient:
         if json_match:
             return json_match.group(1).strip()
         
-        # Try to find JSON directly (starts with [ or {)
-        json_match = re.search(r'([\[\{].*?[\]\}])', response, re.DOTALL)
+        # Try to find JSON directly (starts with [ or {) - more flexible
+        json_match = re.search(r'([\[\{][^\[\{]*?[\]\}])', response, re.DOTALL)
         if json_match:
-            return json_match.group(1).strip()
+            result = json_match.group(1).strip()
+            # Basic validation - must have balanced brackets
+            if result.count('[') == result.count(']') and result.count('{') == result.count('}'):
+                return result
+        
+        # Try to find incomplete JSON and complete it
+        incomplete_match = re.search(r'\[\s*\{\s*"[^"]+"\s*:\s*"[^"]*"', response, re.DOTALL)
+        if incomplete_match:
+            # This catches partial JSON - we'll let the parser try to fix it
+            return incomplete_match.group(0).strip()
         
         return None
     

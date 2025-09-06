@@ -5,38 +5,27 @@ system_prompt: |
   You have deep knowledge of global cultures and can suggest culturally-specific variations.
 
 user_prompt: |
-  Analyze these core concepts and suggest 10-15 cultural contexts:
+  Analyze these core concepts and identify cultural contexts that are directly relevant to these specific topics:
   
   **Core Concepts:** {core_concepts}
   **Geographic Context:** {geographic_context}
   
-  For each concept, identify:
-  - Cultural references and expressions
-  - Social customs and norms
-  - Idiomatic expressions or phrases
-  - Cultural values that might influence the context
-  - Generational or demographic cultural aspects
+  IMPORTANT: Your cultural contexts must be specifically relevant to these concepts. Do not provide generic cultural categories.
   
-  Provide culturally diverse suggestions that would create meaningful variations in data generation.
+  For EACH concept, identify specific cultural aspects:
+  - Cultural groups, communities, or societies directly related to these concepts
+  - Traditional practices, ceremonies, or customs connected to these topics
+  - Cultural values and beliefs that specifically influence these concepts
+  - Historical or contemporary cultural movements relevant to these concepts
+  - Language variations, dialects, or cultural expressions tied to these topics
   
-  Format as JSON array:
+  Focus on cultural relevance over diversity. If the concepts relate to specific cultural groups, prioritize those and their variations.
+  
+  Return ONLY a JSON array of strings with 10-15 cultural contexts:
   ```json
   [
-    {
-      "cultural_context": "...",
-      "description": "Brief explanation",
-      "relevance": "high|medium|low",
-      "examples": ["expression1", "expression2"]
-    }
+    "Cultural context 1",
+    "Cultural context 2",
+    "Cultural context 3"
   ]
   ```
-
-fallback_suggestions:
-  - "Traditional values"
-  - "Modern urban lifestyle"
-  - "Family-oriented culture"
-  - "Individual-focused society"
-  - "Collectivist community"
-  - "Religious influences"
-  - "Secular worldview"
-  - "Generational differences"

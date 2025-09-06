@@ -12,46 +12,27 @@ system_prompt: |
   - Decision-making authority levels
 
 user_prompt: |
-  Analyze these core concepts and suggest 10-15 persona contexts that would create
-  meaningful user perspective variations for synthetic data generation:
+  Analyze these core concepts and identify persona contexts that are directly relevant to these specific topics:
   
   **Core Concepts:** {core_concepts}
   **Additional Context:** {geographic_context}
   
-  For each persona, consider:
-  - Expertise level and experience with the concepts
-  - Professional role and responsibilities
-  - Decision-making authority and influence
-  - Usage context and scenarios
-  - Demographic considerations and perspectives
+  IMPORTANT: Your persona contexts must be specifically relevant to these concepts. Do not provide generic user types.
   
-  Provide diverse persona suggestions that cover different user types and contexts.
+  For EACH concept, identify specific personas:
+  - People, roles, or professions directly involved with these concepts
+  - Community members, practitioners, or experts specifically related to these topics
+  - Individuals whose lives, work, or identity are connected to these concepts
+  - Different experience levels within the specific domain of these concepts
+  - Stakeholders who have particular relationships to these topics
   
-  Format as JSON array:
+  Focus on persona relevance over diversity. If the concepts relate to specific communities or domains, prioritize those personas.
+  
+  Return ONLY a JSON array of strings with 10-15 persona contexts:
   ```json
   [
-    {{
-      "persona_context": "Persona name/type",
-      "description": "Brief explanation of the persona",
-      "expertise_level": "beginner|intermediate|expert",
-      "role_type": "end_user|decision_maker|technical_expert|administrator"
-    }}
+    "Persona context 1",
+    "Persona context 2", 
+    "Persona context 3"
   ]
   ```
-
-fallback_suggestions:
-  - "Expert User"
-  - "Novice User" 
-  - "Intermediate User"
-  - "Business Professional"
-  - "Individual Consumer"
-  - "Technical Specialist"
-  - "General User"
-  - "Decision Maker"
-  - "End User"
-  - "Administrator"
-  - "Researcher"
-  - "Student"
-  - "Senior Professional"
-  - "Young Professional"
-  - "Small Business Owner"

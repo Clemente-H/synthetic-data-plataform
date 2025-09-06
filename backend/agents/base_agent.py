@@ -41,106 +41,70 @@ class BaseAgent(ABC):
                                   additional_context: Dict[str, List[str]] = None,
                                   max_suggestions: int = 15) -> List[str]:
         """
-        Common method to generate suggestions using prompts
+        Generate suggestions using LLM - no fallbacks, proper error handling
         """
-        try:
-            # Get formatted prompt for this agent
-            prompt_data = self.prompt_loader.get_characterization_prompt(
-                self.agent_type, 
-                core_concepts, 
-                additional_context or {}
-            )
-            
-            # Generate with appropriate model
-            response = await self.client.generate(
-                prompt=prompt_data['user'],
-                system_prompt=prompt_data['system'],
-                task_type='characterization'
-            )
-            
-            # Try to parse JSON response
-            suggestions = self._extract_suggestions_from_response(response, max_suggestions)
-            
-            if not suggestions:
-                # Use fallback suggestions
-                suggestions = self._get_fallback_suggestions()
-            
-            logger.info(f"{self.__class__.__name__} generated {len(suggestions)} suggestions")
-            return suggestions
-            
-        except Exception as e:
-            logger.error(f"Error in {self.__class__.__name__}: {e}")
-            return self._get_fallback_suggestions()
+        # Get formatted prompt for this agent
+        prompt_data = self.prompt_loader.get_characterization_prompt(
+            self.agent_type, 
+            core_concepts, 
+            additional_context or {}
+        )
+        
+        # Generate with appropriate model
+        response = await self.client.generate(
+            prompt=prompt_data['user'],
+            system_prompt=prompt_data['system'],
+            task_type='characterization'
+        )
+        
+        # Parse JSON response - if it fails, raise error
+        suggestions = self._extract_suggestions_from_response(response, max_suggestions)
+        
+        if not suggestions:
+            raise Exception(f"LLM failed to generate valid JSON for {self.__class__.__name__}")
+        
+        logger.info(f"{self.__class__.__name__} generated {len(suggestions)} suggestions from LLM")
+        return suggestions
     
     def _extract_suggestions_from_response(self, response: str, max_suggestions: int = 15) -> List[str]:
         """
-        Extract suggestions from LLM response with improved parsing
+        Extract suggestions from LLM JSON response - strict parsing only
         """
-        # Try to parse as JSON first
+        # Parse JSON response
         json_data = self.client.parse_json_response(response)
         
-        if json_data:
-            suggestions = []
-            
-            # Handle different JSON formats
-            if isinstance(json_data, list):
-                # Direct list of suggestions
-                for item in json_data:
-                    if isinstance(item, str):
-                        suggestions.append(item.strip())
-                    elif isinstance(item, dict):
-                        # Try multiple possible keys based on agent type
-                        possible_keys = [
-                            'cultural_context', 'geographic_context', 'linguistic_context', 
-                            'persona_context', 'domain_context',
-                            'suggestion', 'context', 'name', 'title', 'value'
-                        ]
-                        
-                        for key in possible_keys:
-                            if key in item and item[key]:
-                                suggestions.append(str(item[key]).strip())
-                                break
-            
-            elif isinstance(json_data, dict) and 'suggestions' in json_data:
-                # Handle wrapped format: {"suggestions": [...]}
-                return self._extract_suggestions_from_response(str(json_data['suggestions']), max_suggestions)
-            
-            # Filter and limit suggestions
-            suggestions = [s for s in suggestions if s and len(s.strip()) > 2]
-            if suggestions:
-                logger.info(f"Successfully extracted {len(suggestions)} suggestions from JSON")
-                return suggestions[:max_suggestions]
+        if not json_data:
+            logger.error(f"No valid JSON found in response: {response[:200]}...")
+            return []
         
-        # If JSON parsing fails, try to extract from text
-        logger.info("JSON parsing failed, trying text extraction")
-        return self._extract_from_text(response, max_suggestions)
-    
-    def _extract_from_text(self, response: str, max_suggestions: int = 15) -> List[str]:
-        """
-        Extract suggestions from plain text response
-        """
-        lines = response.split('\n')
         suggestions = []
         
-        for line in lines:
-            line = line.strip()
-            # Look for bullet points, numbers, or clean text
-            if line and (line.startswith('-') or line.startswith('*') or 
-                        line.startswith(tuple('123456789')) or 
-                        (len(line) > 3 and len(line) < 100)):
-                # Clean up the line
-                cleaned = line.lstrip('-*0123456789. ').strip()
-                if cleaned and len(cleaned) > 2:
-                    suggestions.append(cleaned)
+        # Expect array of strings: ["item1", "item2", "item3"]
+        if isinstance(json_data, list):
+            for item in json_data:
+                if isinstance(item, str) and item.strip():
+                    suggestions.append(item.strip())
+                elif isinstance(item, dict):
+                    # For dict format, extract the main context value
+                    context_key = f"{self.agent_type}_context"
+                    if context_key in item and item[context_key]:
+                        suggestions.append(str(item[context_key]).strip())
         
-        return suggestions[:max_suggestions]
+        # Or expect dict with agent-specific key: {"cultural": ["item1", "item2"]}
+        elif isinstance(json_data, dict):
+            if self.agent_type in json_data and isinstance(json_data[self.agent_type], list):
+                suggestions = [str(item).strip() for item in json_data[self.agent_type] if str(item).strip()]
+        
+        # Filter valid suggestions
+        valid_suggestions = [s for s in suggestions if s and len(s) > 2]
+        
+        if valid_suggestions:
+            logger.info(f"Extracted {len(valid_suggestions)} valid suggestions from LLM JSON")
+            return valid_suggestions[:max_suggestions]
+        
+        logger.error(f"No valid suggestions found in JSON: {json_data}")
+        return []
     
-    @abstractmethod
-    def _get_fallback_suggestions(self) -> List[str]:
-        """
-        Return fallback suggestions if AI generation fails
-        """
-        pass
     
     def validate_suggestions(self, suggestions: List[str]) -> List[str]:
         """

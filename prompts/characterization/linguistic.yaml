@@ -11,46 +11,27 @@ system_prompt: |
   - Cross-cultural communication patterns
 
 user_prompt: |
-  Analyze these core concepts and suggest 10-15 linguistic contexts that would create
-  meaningful variations for synthetic data generation:
+  Analyze these core concepts and identify linguistic contexts that are directly relevant to these specific topics:
   
   **Core Concepts:** {core_concepts}
   **Additional Context:** {geographic_context}
   
-  For each linguistic context, consider:
-  - Communication styles and formality levels
-  - Technical vs. plain language approaches
-  - Audience-specific language choices
-  - Cultural communication patterns
-  - Professional vs. casual terminology
+  IMPORTANT: Your linguistic contexts must be specifically relevant to these concepts. Do not provide generic language styles.
   
-  Provide diverse linguistic suggestions that would create meaningful language variations.
+  For EACH concept, identify specific linguistic aspects:
+  - Languages, dialects, or language variants directly associated with these concepts
+  - Technical terminology, specialized vocabulary, or jargon specific to these topics
+  - Communication styles unique to the communities or domains of these concepts
+  - Traditional or ceremonial language patterns related to these concepts
+  - Oral tradition, storytelling, or narrative styles connected to these topics
   
-  Format as JSON array:
+  Focus on linguistic relevance over variety. If the concepts relate to specific languages or communities, prioritize those linguistic contexts.
+  
+  Return ONLY a JSON array of strings with 10-15 linguistic contexts:
   ```json
   [
-    {{
-      "linguistic_context": "Communication style name",
-      "description": "Brief explanation",
-      "formality_level": "formal|casual|mixed",
-      "audience": "Target audience type"
-    }}
+    "Linguistic context 1",
+    "Linguistic context 2",
+    "Linguistic context 3"
   ]
   ```
-
-fallback_suggestions:
-  - "Professional Tone"
-  - "Conversational Style"
-  - "Technical Language"
-  - "Plain Language"
-  - "Formal Documentation"
-  - "Informal Communication"
-  - "Instructional Style"
-  - "Explanatory Tone"
-  - "Question-Answer Format"
-  - "Step-by-Step Language"
-  - "Comparative Language"
-  - "Descriptive Style"
-  - "Analytical Tone"
-  - "Narrative Style"
-  - "Concise Communication"
