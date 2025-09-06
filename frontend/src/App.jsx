@@ -401,11 +401,16 @@ function App() {
           )}
 
           {/* Debug Info - Remove after fixing */}
-          {isProcessing && currentStep >= 6 && (
+          {isProcessing && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="text-sm text-yellow-800">
-                <strong>Debug:</strong> Generation in progress... Stage: {currentStage} | Samples: {generatedSamples.length}
+                <strong>Debug:</strong> Processing... Stage: {currentStage || 'unknown'} | Step: {currentStep} | Samples: {generatedSamples?.length || 0}
               </div>
+              {currentStage === 'generation' && (
+                <div className="text-xs text-yellow-600 mt-2">
+                  Generation may take a while with large models. Please wait...
+                </div>
+              )}
             </div>
           )}
 
