@@ -400,8 +400,17 @@ function App() {
             </div>
           )}
 
+          {/* Debug Info - Remove after fixing */}
+          {isProcessing && currentStep >= 6 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="text-sm text-yellow-800">
+                <strong>Debug:</strong> Generation in progress... Stage: {currentStage} | Samples: {generatedSamples.length}
+              </div>
+            </div>
+          )}
+
           {/* Results Section - Show after generation complete */}
-          {generatedSamples.length > 0 && (
+          {generatedSamples && generatedSamples.length > 0 && (
             <div className="bg-white rounded-2xl shadow-lg p-8 border slide-up">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -433,7 +442,7 @@ function App() {
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
                 <h3 className="font-semibold text-gray-800 mb-3">Sample Preview:</h3>
                 <div className="bg-white rounded border p-3 text-sm font-mono max-h-40 overflow-y-auto">
-                  {JSON.stringify(generatedSamples[0], null, 2)}
+                  {generatedSamples[0] ? JSON.stringify(generatedSamples[0], null, 2) : 'No sample data available'}
                 </div>
               </div>
 
