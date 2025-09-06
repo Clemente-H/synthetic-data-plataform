@@ -136,7 +136,7 @@ class OllamaClient:
     
     def parse_json_response(self, response: str) -> Optional[Dict[str, Any]]:
         """
-        Parse JSON from LLM response
+        Parse JSON from LLM response with improved error handling
         """
         json_text = self.extract_json_from_response(response)
         if json_text:
@@ -144,12 +144,27 @@ class OllamaClient:
                 return json.loads(json_text)
             except json.JSONDecodeError as e:
                 logger.warning(f"JSON decode error: {e}")
-                # Try to fix common JSON issues
-                fixed_json = json_text.replace("'", '"').replace('True', 'true').replace('False', 'false')
-                try:
-                    return json.loads(fixed_json)
-                except json.JSONDecodeError:
-                    logger.error("Could not parse JSON even after fixes")
+                logger.warning(f"Problematic JSON text: {json_text[:200]}...")
+                
+                # Try multiple fixes
+                fixes_to_try = [
+                    # Fix quotes and booleans
+                    json_text.replace("'", '"').replace('True', 'true').replace('False', 'false'),
+                    # Try to wrap partial JSON in array
+                    f"[{json_text}]" if not json_text.strip().startswith(('[', '{')) else json_text,
+                    # Try to complete incomplete JSON objects
+                    json_text + '}]' if json_text.count('{') > json_text.count('}') else json_text,
+                ]
+                
+                for i, fixed_json in enumerate(fixes_to_try):
+                    try:
+                        result = json.loads(fixed_json)
+                        logger.info(f"JSON parsed successfully with fix #{i+1}")
+                        return result
+                    except json.JSONDecodeError:
+                        continue
+                
+                logger.error("Could not parse JSON even after all fixes")
         
         return None
     

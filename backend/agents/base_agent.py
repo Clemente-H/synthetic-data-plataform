@@ -74,7 +74,7 @@ class BaseAgent(ABC):
     
     def _extract_suggestions_from_response(self, response: str, max_suggestions: int = 15) -> List[str]:
         """
-        Extract suggestions from LLM response
+        Extract suggestions from LLM response with improved parsing
         """
         # Try to parse as JSON first
         json_data = self.client.parse_json_response(response)
@@ -88,20 +88,31 @@ class BaseAgent(ABC):
                 for item in json_data:
                     if isinstance(item, str):
                         suggestions.append(item.strip())
-                    elif isinstance(item, dict) and 'cultural_context' in item:
-                        suggestions.append(item['cultural_context'].strip())
-                    elif isinstance(item, dict) and any(key in item for key in ['suggestion', 'context', 'name']):
-                        # Extract from various possible keys
-                        for key in ['suggestion', 'context', 'name', 'geographic_context']:
+                    elif isinstance(item, dict):
+                        # Try multiple possible keys based on agent type
+                        possible_keys = [
+                            'cultural_context', 'geographic_context', 'linguistic_context', 
+                            'persona_context', 'domain_context',
+                            'suggestion', 'context', 'name', 'title', 'value'
+                        ]
+                        
+                        for key in possible_keys:
                             if key in item and item[key]:
                                 suggestions.append(str(item[key]).strip())
                                 break
             
+            elif isinstance(json_data, dict) and 'suggestions' in json_data:
+                # Handle wrapped format: {"suggestions": [...]}
+                return self._extract_suggestions_from_response(str(json_data['suggestions']), max_suggestions)
+            
             # Filter and limit suggestions
             suggestions = [s for s in suggestions if s and len(s.strip()) > 2]
-            return suggestions[:max_suggestions]
+            if suggestions:
+                logger.info(f"Successfully extracted {len(suggestions)} suggestions from JSON")
+                return suggestions[:max_suggestions]
         
         # If JSON parsing fails, try to extract from text
+        logger.info("JSON parsing failed, trying text extraction")
         return self._extract_from_text(response, max_suggestions)
     
     def _extract_from_text(self, response: str, max_suggestions: int = 15) -> List[str]:
