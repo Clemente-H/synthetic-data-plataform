@@ -17,7 +17,7 @@ user_prompt: |
   Respond with ONLY a valid JSON array. No explanation, no markdown formatting.
   
   Format:
-  [{"instruction": "question or task", "response": "helpful answer"}]
+  [{{"instruction": "question or task", "response": "helpful answer"}}]
 
 validation:
   required_fields: ["instruction", "response"]
