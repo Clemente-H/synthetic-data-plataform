@@ -125,7 +125,8 @@ class PipelineOrchestrator:
             generated_data = await self._step_6_generation(
                 validated_concepts, 
                 generation_config,
-                max_total_samples
+                max_total_samples,
+                websocket_task_id
             )
             
             # Step 7: Quality Assurance
@@ -318,7 +319,8 @@ class PipelineOrchestrator:
     
     async def _step_6_generation(self, concept_dimensions: Dict[str, List[str]], 
                                 generation_config: Dict[str, Any],
-                                max_total_samples: int) -> Dict[str, Any]:
+                                max_total_samples: int,
+                                websocket_task_id: Optional[str] = None) -> Dict[str, Any]:
         """Step 6: Combinatorial generation"""
         logger.info("⚡ Step 6: Combinatorial Generation")
         
@@ -336,14 +338,36 @@ class PipelineOrchestrator:
             logger.info(f"⚠️ Limiting to {max_total_samples:,} samples")
             estimated_samples = max_total_samples
         
-        # Generate limited sample for pipeline demonstration
-        # In production, this would use the full generation API
-        sample_combinations = self.combinator.preview_combinations(concept_dimensions, limit=10)
+        # Generate combinations for full-scale production
+        sample_combinations = self.combinator.generate_combinations(concept_dimensions)
+        
+        # Limit combinations based on max_total_samples
+        max_combinations = max_total_samples // 2  # 2 samples per combination
+        sample_combinations = list(sample_combinations)[:max_combinations]
+        
+        logger.info(f"🎯 Processing {len(sample_combinations)} combinations for {len(sample_combinations)*2} samples")
         
         generated_samples = []
-        for combo in sample_combinations:
+        for i, combo in enumerate(sample_combinations):
             combo_id = combo.get('combination_id', 'unknown')
-            logger.info(f"🎯 Starting generation for combo: {combo_id}")
+            progress_msg = f"🎯 Processing combination {i+1:,} of {len(sample_combinations):,} (ID: {combo_id})"
+            logger.info(progress_msg)
+            
+            # Send progress update via WebSocket if available
+            if WEBSOCKET_AVAILABLE and websocket_task_id:
+                progress_percent = (i / len(sample_combinations)) * 0.5 + 0.5  # Generation is 50-100% of pipeline
+                await send_pipeline_update(
+                    task_id=websocket_task_id,
+                    stage="generation",
+                    progress=progress_percent,
+                    message=f"Generating samples {i+1:,}/{len(sample_combinations):,}",
+                    data={
+                        "combination_current": i + 1,
+                        "combination_total": len(sample_combinations),
+                        "samples_generated": len(generated_samples),
+                        "combination_id": combo_id
+                    }
+                )
             
             try:
                 # Generate a few samples per combination for demo

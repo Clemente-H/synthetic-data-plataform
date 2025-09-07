@@ -4,20 +4,21 @@ system_prompt: |
   Create diverse, realistic instructions with comprehensive, accurate responses that demonstrate the desired behavior.
 
 user_prompt: |
-  Generate {samples_per_combination} instruction-response pairs for these concepts:
-  - Core: {core_concepts}
-  - Geographic: {geographic_context}
-  - Cultural: {cultural_context}
-  - Linguistic: {linguistic_context}
-  - Persona: {persona_context}  
-  - Domain: {domain_context}
+  Simulate {samples_per_combination} realistic conversations based on this context combination:
   
-  Create realistic instructions and helpful responses that incorporate these contexts.
+  Context: {geographic_context} + {cultural_context} + {linguistic_context} + {persona_context} + {domain_context}
+  Core topics: {core_concepts}
   
-  Respond with ONLY a valid JSON array. No explanation, no markdown formatting.
+  Create natural conversations where the persona asks questions or makes requests, and receives contextually appropriate responses that reflect the geographic, cultural, linguistic, and domain contexts.
   
-  Format:
-  [{{"instruction": "question or task", "response": "helpful answer"}}]
+  Examples of persona interactions:
+  - Asking for advice or information
+  - Seeking help with a problem  
+  - Requesting explanations
+  - Sharing experiences and getting responses
+  
+  Respond with ONLY a valid JSON array:
+  [{{"instruction": "natural question or request from persona", "response": "contextually appropriate answer"}}]
 
 validation:
   required_fields: ["instruction", "response"]
