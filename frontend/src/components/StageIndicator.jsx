@@ -5,7 +5,9 @@ const StageIndicator = ({
   overallProgress, 
   isProcessing, 
   isConnected, 
-  error 
+  error,
+  progressMessage,
+  progressData 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -73,6 +75,39 @@ const StageIndicator = ({
                 <div className="text-xs text-gray-600">
                   {getStageDisplay(currentStage)}
                 </div>
+                
+                {/* Progress message from backend */}
+                {progressMessage && (
+                  <div className="text-xs text-blue-600 font-medium">
+                    {progressMessage}
+                  </div>
+                )}
+                
+                {/* Detailed progress for generation stage */}
+                {currentStage === 'generation' && progressData && (
+                  <div className="space-y-1 text-xs text-gray-600">
+                    {progressData.combination_current && progressData.combination_total && (
+                      <div>
+                        Combination: {progressData.combination_current.toLocaleString()} / {progressData.combination_total.toLocaleString()}
+                      </div>
+                    )}
+                    {progressData.samples_generated && (
+                      <div>
+                        Samples: {progressData.samples_generated.toLocaleString()}
+                      </div>
+                    )}
+                    {progressData.current_batch && progressData.total_batches && (
+                      <div>
+                        Batch: {progressData.current_batch} / {progressData.total_batches} (GPU Parallel)
+                      </div>
+                    )}
+                    {progressData.combination_id && (
+                      <div className="text-gray-400">
+                        ID: {progressData.combination_id}
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 {overallProgress !== undefined && (
                   <div className="space-y-1">

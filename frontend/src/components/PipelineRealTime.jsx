@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { usePipelineWebSocket } from '../hooks/usePipelineWebSocket'
+import StageIndicator from './StageIndicator'
 
 const PipelineRealTime = () => {
   const [inputText, setInputText] = useState(
@@ -24,6 +25,8 @@ const PipelineRealTime = () => {
     progressLog,
     currentStage,
     overallProgress,
+    progressMessage,
+    progressData,
     runFullPipeline,
     extractConcepts,
     runCharacterization,
@@ -441,6 +444,17 @@ const PipelineRealTime = () => {
           )}
         </div>
       </div>
+      
+      {/* Floating Stage Indicator */}
+      <StageIndicator 
+        currentStage={currentStage}
+        overallProgress={overallProgress}
+        isProcessing={isProcessing}
+        isConnected={isConnected}
+        error={error}
+        progressMessage={progressMessage}
+        progressData={progressData}
+      />
     </div>
   )
 }

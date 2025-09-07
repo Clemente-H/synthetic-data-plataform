@@ -16,8 +16,10 @@ from agents.linguistic_agent import LinguisticAgent
 from agents.persona_agent import PersonaAgent
 from agents.domain_agent import DomainAgent
 from core.combinator import ConceptCombinator
+from core.gpu_parallelize import GPUParallelizer
 from utils.ollama_client import ollama_client
 from utils.prompt_loader import prompt_loader
+from config.gpu_config import PARALLEL_STAGES
 
 # Import WebSocket helpers - handle gracefully if not available
 try:
@@ -56,12 +58,13 @@ class PipelineOrchestrator:
             'domain': DomainAgent()
         }
         self.combinator = ConceptCombinator(max_combinations=50000)
+        self.gpu_parallelizer = GPUParallelizer()
         
         # Pipeline state tracking
         self.current_stage = None
         self.pipeline_state = {}
         
-        logger.info("🎭 Pipeline Orchestrator initialized with 5 specialized agents")
+        logger.info("🎭 Pipeline Orchestrator initialized with 5 specialized agents + GPU parallelization")
     
     async def run_full_pipeline(self, 
                                input_text: str,
@@ -245,35 +248,43 @@ class PipelineOrchestrator:
         return concepts
     
     async def _step_3_characterization(self, concepts: List[Dict[str, Any]]) -> Dict[str, List[str]]:
-        """Step 3: Multi-dimensional characterization with 5 agents (SEQUENTIAL)"""
-        logger.info("🎯 Step 3: Multi-Dimensional Characterization (Sequential)")
+        """Step 3: Multi-dimensional characterization with 5 agents (PARALLEL)"""
         
         # Extract concept names for agents
         concept_names = [c["name"] for c in concepts]
         
-        characterization_results = {}
-        accumulated_context = {}
-        
-        # Run agents sequentially to avoid overwhelming the system
-        agent_order = ['geographic', 'cultural', 'linguistic', 'persona', 'domain']
-        
-        for agent_name in agent_order:
-            logger.info(f"🤖 Running {agent_name} agent...")
+        # Check if parallelization is enabled for characterization
+        if "characterization" in PARALLEL_STAGES:
+            logger.info("🎯 Step 3: Multi-Dimensional Characterization (PARALLEL)")
+            characterization_results = await self.gpu_parallelizer.parallel_characterization(
+                self.agents, 
+                concept_names
+            )
+        else:
+            logger.info("🎯 Step 3: Multi-Dimensional Characterization (SEQUENTIAL)")
+            characterization_results = {}
+            accumulated_context = {}
             
-            try:
-                agent = self.agents[agent_name]
-                suggestions = await agent.process(concept_names, accumulated_context)
-                characterization_results[agent_name] = suggestions
-                accumulated_context[agent_name] = suggestions
+            # Run agents sequentially
+            agent_order = ['geographic', 'cultural', 'linguistic', 'persona', 'domain']
+            
+            for agent_name in agent_order:
+                logger.info(f"🤖 Running {agent_name} agent...")
                 
-                logger.info(f"✅ {agent_name}: {len(suggestions)} suggestions")
-                
-                # Small delay between agents to be gentle on the system
-                await asyncio.sleep(1)
-                
-            except Exception as e:
-                logger.warning(f"⚠️ {agent_name} agent failed: {e}")
-                characterization_results[agent_name] = []
+                try:
+                    agent = self.agents[agent_name]
+                    suggestions = await agent.process(concept_names, accumulated_context)
+                    characterization_results[agent_name] = suggestions
+                    accumulated_context[agent_name] = suggestions
+                    
+                    logger.info(f"✅ {agent_name}: {len(suggestions)} suggestions")
+                    
+                    # Small delay between agents to be gentle on the system
+                    await asyncio.sleep(1)
+                    
+                except Exception as e:
+                    logger.warning(f"⚠️ {agent_name} agent failed: {e}")
+                    characterization_results[agent_name] = []
         
         self.pipeline_state["stages_completed"].append("characterization")
         self.pipeline_state["results"]["characterization"] = characterization_results
@@ -347,68 +358,98 @@ class PipelineOrchestrator:
         
         logger.info(f"🎯 Processing {len(sample_combinations)} combinations for {len(sample_combinations)*2} samples")
         
-        generated_samples = []
-        for i, combo in enumerate(sample_combinations):
-            combo_id = combo.get('combination_id', 'unknown')
-            progress_msg = f"🎯 Processing combination {i+1:,} of {len(sample_combinations):,} (ID: {combo_id})"
-            logger.info(progress_msg)
+        # Check if parallelization is enabled for generation
+        if "generation" in PARALLEL_STAGES:
+            logger.info("⚡ Using GPU parallelization for generation")
             
-            # Send progress update via WebSocket if available
-            if WEBSOCKET_AVAILABLE and websocket_task_id:
-                progress_percent = (i / len(sample_combinations)) * 0.5 + 0.5  # Generation is 50-100% of pipeline
-                await send_pipeline_update(
-                    task_id=websocket_task_id,
-                    stage="generation",
-                    progress=progress_percent,
-                    message=f"Generating samples {i+1:,}/{len(sample_combinations):,}",
-                    data={
-                        "combination_current": i + 1,
-                        "combination_total": len(sample_combinations),
-                        "samples_generated": len(generated_samples),
-                        "combination_id": combo_id
-                    }
-                )
+            async def progress_callback(progress_data):
+                if WEBSOCKET_AVAILABLE and websocket_task_id:
+                    progress_percent = (progress_data["completed"] / progress_data["total"]) * 0.5 + 0.5
+                    await send_pipeline_update(
+                        task_id=websocket_task_id,
+                        stage="generation",
+                        progress=progress_percent,
+                        message=f"Generating samples {progress_data['completed']:,}/{progress_data['total']:,} (Batch {progress_data['current_batch']}/{progress_data['total_batches']})",
+                        data={
+                            "combination_current": progress_data["completed"],
+                            "combination_total": progress_data["total"],
+                            "samples_generated": progress_data["samples_generated"],
+                            "current_batch": progress_data["current_batch"],
+                            "total_batches": progress_data["total_batches"]
+                        }
+                    )
             
-            try:
-                # Generate a few samples per combination for demo
-                logger.info(f"📝 Getting template for format: {generation_config['format_type']}")
-                template_data = prompt_loader.get_generation_template(
-                    generation_config["format_type"],
-                    combo,
-                    combo.get("complexity_level", 1),
-                    2  # Limited samples for pipeline demo
-                )
-                logger.info(f"✅ Template generated, user prompt length: {len(template_data.get('user', ''))}")
-                
-                logger.info(f"🤖 Sending to LLM...")
-                response = await ollama_client.generate(
-                    prompt=template_data['user'],
-                    system_prompt=template_data['system'],
-                    task_type='generation'
-                )
-                logger.info(f"✅ LLM response received, length: {len(response)}")
-                
-                # DEBUG: Save raw LLM response to file
+            generated_samples = await self.gpu_parallelizer.parallel_generation(
+                sample_combinations,
+                generation_config,
+                websocket_task_id,
+                progress_callback
+            )
+            
+        else:
+            logger.info("⚡ Using sequential generation")
+            generated_samples = []
+            for i, combo in enumerate(sample_combinations):
                 combo_id = combo.get('combination_id', 'unknown')
-                debug_filename = f"debug_generation_{combo_id}.txt"
+                progress_msg = f"🎯 Processing combination {i+1:,} of {len(sample_combinations):,} (ID: {combo_id})"
+                logger.info(progress_msg)
+                
+                # Send progress update via WebSocket if available
+                if WEBSOCKET_AVAILABLE and websocket_task_id:
+                    progress_percent = (i / len(sample_combinations)) * 0.5 + 0.5  # Generation is 50-100% of pipeline
+                    await send_pipeline_update(
+                        task_id=websocket_task_id,
+                        stage="generation",
+                        progress=progress_percent,
+                        message=f"Generating samples {i+1:,}/{len(sample_combinations):,}",
+                        data={
+                            "combination_current": i + 1,
+                            "combination_total": len(sample_combinations),
+                            "samples_generated": len(generated_samples),
+                            "combination_id": combo_id
+                        }
+                    )
+                
                 try:
-                    with open(debug_filename, 'w', encoding='utf-8') as f:
-                        f.write(f"=== PROMPT ===\n")
-                        f.write(f"System: {template_data.get('system', 'N/A')}\n\n")
-                        f.write(f"User: {template_data['user']}\n\n")
-                        f.write(f"=== LLM RESPONSE ===\n")
-                        f.write(response)
-                    logger.info(f"💾 Saved raw LLM response to {debug_filename}")
-                except Exception as save_error:
-                    logger.warning(f"Failed to save debug file: {save_error}")
-                
-                # Parse and add samples
-                parsed_samples = self._parse_generation_response(response, combo)
-                generated_samples.extend(parsed_samples)
-                
-            except Exception as e:
-                logger.warning(f"Generation failed for combination {combo.get('combination_id')}: {e}")
-                continue
+                    # Generate a few samples per combination for demo
+                    logger.info(f"📝 Getting template for format: {generation_config['format_type']}")
+                    template_data = prompt_loader.get_generation_template(
+                        generation_config["format_type"],
+                        combo,
+                        combo.get("complexity_level", 1),
+                        2  # Limited samples for pipeline demo
+                    )
+                    logger.info(f"✅ Template generated, user prompt length: {len(template_data.get('user', ''))}")
+                    
+                    logger.info(f"🤖 Sending to LLM...")
+                    response = await ollama_client.generate(
+                        prompt=template_data['user'],
+                        system_prompt=template_data['system'],
+                        task_type='generation'
+                    )
+                    logger.info(f"✅ LLM response received, length: {len(response)}")
+                    
+                    # DEBUG: Save raw LLM response to file
+                    combo_id = combo.get('combination_id', 'unknown')
+                    debug_filename = f"debug_generation_{combo_id}.txt"
+                    try:
+                        with open(debug_filename, 'w', encoding='utf-8') as f:
+                            f.write(f"=== PROMPT ===\n")
+                            f.write(f"System: {template_data.get('system', 'N/A')}\n\n")
+                            f.write(f"User: {template_data['user']}\n\n")
+                            f.write(f"=== LLM RESPONSE ===\n")
+                            f.write(response)
+                        logger.info(f"💾 Saved raw LLM response to {debug_filename}")
+                    except Exception as save_error:
+                        logger.warning(f"Failed to save debug file: {save_error}")
+                    
+                    # Parse and add samples
+                    parsed_samples = self._parse_generation_response(response, combo)
+                    generated_samples.extend(parsed_samples)
+                    
+                except Exception as e:
+                    logger.warning(f"Generation failed for combination {combo.get('combination_id')}: {e}")
+                    continue
         
         generation_result = {
             "samples": generated_samples,

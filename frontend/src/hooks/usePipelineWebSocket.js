@@ -22,6 +22,8 @@ export const usePipelineWebSocket = () => {
   const [progressLog, setProgressLog] = useState([])
   const [currentStage, setCurrentStage] = useState(null)
   const [overallProgress, setOverallProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
+  const [progressData, setProgressData] = useState(null)
   
   // WebSocket integration
   const {
@@ -64,6 +66,8 @@ export const usePipelineWebSocket = () => {
       
       setCurrentStage(message.stage)
       setOverallProgress(message.progress || 0)
+      setProgressMessage(message.message || '')
+      setProgressData(message.data || null)
       
       // Update pipeline step based on stage
       const stageToStep = {
@@ -357,6 +361,8 @@ export const usePipelineWebSocket = () => {
     progressLog,
     currentStage,
     overallProgress,
+    progressMessage,
+    progressData,
     
     // Pipeline actions
     runFullPipeline,
