@@ -342,20 +342,27 @@ class PipelineOrchestrator:
         
         generated_samples = []
         for combo in sample_combinations:
+            combo_id = combo.get('combination_id', 'unknown')
+            logger.info(f"🎯 Starting generation for combo: {combo_id}")
+            
             try:
                 # Generate a few samples per combination for demo
+                logger.info(f"📝 Getting template for format: {generation_config['format_type']}")
                 template_data = prompt_loader.get_generation_template(
                     generation_config["format_type"],
                     combo,
                     combo.get("complexity_level", 1),
                     2  # Limited samples for pipeline demo
                 )
+                logger.info(f"✅ Template generated, user prompt length: {len(template_data.get('user', ''))}")
                 
+                logger.info(f"🤖 Sending to LLM...")
                 response = await ollama_client.generate(
                     prompt=template_data['user'],
                     system_prompt=template_data['system'],
                     task_type='generation'
                 )
+                logger.info(f"✅ LLM response received, length: {len(response)}")
                 
                 # DEBUG: Save raw LLM response to file
                 combo_id = combo.get('combination_id', 'unknown')
