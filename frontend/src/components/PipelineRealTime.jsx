@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePipelineWebSocket } from '../hooks/usePipelineWebSocket'
 import StageIndicator from './StageIndicator'
 
@@ -12,6 +12,8 @@ const PipelineRealTime = () => {
     max_total_samples: 50,
     max_concepts: 30
   })
+  const [datasets, setDatasets] = useState([])
+  const [loadingDatasets, setLoadingDatasets] = useState(false)
 
   const {
     isConnected,
@@ -43,6 +45,38 @@ const PipelineRealTime = () => {
   const handleConceptsOnly = async () => {
     await extractConcepts(inputText)
   }
+
+  // Load available datasets
+  const loadDatasets = async () => {
+    setLoadingDatasets(true)
+    try {
+      const response = await fetch('http://localhost:8000/api/datasets/list')
+      const data = await response.json()
+      setDatasets(data.datasets || [])
+    } catch (error) {
+      console.error('Failed to load datasets:', error)
+    } finally {
+      setLoadingDatasets(false)
+    }
+  }
+
+  // Download dataset
+  const downloadDataset = (filename) => {
+    const downloadUrl = `http://localhost:8000/api/datasets/download/${filename}`
+    window.open(downloadUrl, '_blank')
+  }
+
+  // Load datasets on component mount and after pipeline completes
+  useEffect(() => {
+    loadDatasets()
+  }, [])
+
+  useEffect(() => {
+    if (finalResults && !isProcessing) {
+      // Refresh datasets list after pipeline completes
+      setTimeout(loadDatasets, 1000)
+    }
+  }, [finalResults, isProcessing])
 
   const getStageColor = (stage) => {
     const colors = {
@@ -442,6 +476,68 @@ const PipelineRealTime = () => {
               </details>
             </div>
           )}
+
+          {/* Available Datasets */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">💾 Generated Datasets</h3>
+              <button
+                onClick={loadDatasets}
+                disabled={loadingDatasets}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm disabled:opacity-50"
+              >
+                {loadingDatasets ? '🔄' : '↻'} Refresh
+              </button>
+            </div>
+
+            {datasets.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                <div className="text-3xl mb-2">📁</div>
+                <p>No datasets generated yet</p>
+                <p className="text-sm mt-1">Run the pipeline to generate your first dataset</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {datasets.map((dataset, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">
+                        {dataset.format_type.toUpperCase()} Dataset
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {dataset.file_format} • {dataset.size_mb} MB
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(dataset.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        dataset.file_format === 'json' ? 'bg-blue-100 text-blue-800' :
+                        dataset.file_format === 'parquet' ? 'bg-green-100 text-green-800' :
+                        dataset.file_format === 'csv' ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {dataset.file_format}
+                      </span>
+                      <button
+                        onClick={() => downloadDataset(dataset.filename)}
+                        className="px-3 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 text-sm"
+                      >
+                        ⬇ Download
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {datasets.length > 0 && (
+              <div className="mt-4 text-xs text-gray-500 text-center">
+                Total: {datasets.length} datasets • {datasets.reduce((sum, d) => sum + d.size_mb, 0).toFixed(2)} MB
+              </div>
+            )}
+          </div>
         </div>
       </div>
       

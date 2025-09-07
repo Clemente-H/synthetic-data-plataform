@@ -492,25 +492,99 @@ class PipelineOrchestrator:
         return quality_result
     
     async def _step_8_export(self, quality_data: Dict[str, Any], format_type: str) -> Dict[str, Any]:
-        """Step 8: Format for HuggingFace export"""
-        logger.info("📦 Step 8: HuggingFace Export Formatting")
+        """Step 8: Export dataset in multiple formats"""
+        logger.info("📦 Step 8: Dataset Export")
+        
+        samples = quality_data.get("samples", [])
+        pipeline_id = self.pipeline_state["pipeline_id"]
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Create exports directory if it doesn't exist
+        import os
+        exports_dir = "exports"
+        os.makedirs(exports_dir, exist_ok=True)
         
         export_data = {
             "format": format_type,
-            "data": quality_data.get("samples", []),
+            "data": samples,
             "metadata": {
-                "total_samples": len(quality_data.get("samples", [])),
+                "total_samples": len(samples),
                 "format_type": format_type,
                 "generated_by": "synthetic_data_platform",
                 "export_timestamp": datetime.now().isoformat(),
-                "pipeline_id": self.pipeline_state["pipeline_id"]
-            }
+                "pipeline_id": pipeline_id,
+                "generation_stats": {
+                    "original_count": quality_data.get("original_count", 0),
+                    "quality_count": quality_data.get("quality_count", 0),
+                    "quality_rate": quality_data.get("quality_rate", 0)
+                }
+            },
+            "exported_files": []
         }
+        
+        # Save as JSON (always)
+        json_filename = f"{exports_dir}/dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.json"
+        try:
+            import json
+            with open(json_filename, 'w', encoding='utf-8') as f:
+                json.dump({
+                    "samples": samples,
+                    "metadata": export_data["metadata"]
+                }, f, indent=2, ensure_ascii=False)
+            export_data["exported_files"].append({
+                "format": "json",
+                "filename": json_filename,
+                "size_mb": round(os.path.getsize(json_filename) / (1024*1024), 2)
+            })
+            logger.info(f"✅ JSON export saved: {json_filename}")
+        except Exception as e:
+            logger.error(f"❌ JSON export failed: {e}")
+        
+        # Save as Parquet (if samples > 10)
+        if len(samples) > 10:
+            try:
+                import pandas as pd
+                
+                # Convert samples to DataFrame
+                df = pd.json_normalize(samples)
+                parquet_filename = f"{exports_dir}/dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.parquet"
+                df.to_parquet(parquet_filename, index=False)
+                
+                export_data["exported_files"].append({
+                    "format": "parquet", 
+                    "filename": parquet_filename,
+                    "size_mb": round(os.path.getsize(parquet_filename) / (1024*1024), 2)
+                })
+                logger.info(f"✅ Parquet export saved: {parquet_filename}")
+            except ImportError:
+                logger.warning("⚠️ Parquet export skipped: pandas/pyarrow not installed")
+            except Exception as e:
+                logger.error(f"❌ Parquet export failed: {e}")
+        
+        # Save as CSV (for easy viewing)
+        try:
+            import pandas as pd
+            df = pd.json_normalize(samples)
+            csv_filename = f"{exports_dir}/dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.csv"
+            df.to_csv(csv_filename, index=False)
+            
+            export_data["exported_files"].append({
+                "format": "csv",
+                "filename": csv_filename, 
+                "size_mb": round(os.path.getsize(csv_filename) / (1024*1024), 2)
+            })
+            logger.info(f"✅ CSV export saved: {csv_filename}")
+        except ImportError:
+            logger.warning("⚠️ CSV export skipped: pandas not installed")
+        except Exception as e:
+            logger.error(f"❌ CSV export failed: {e}")
         
         self.pipeline_state["stages_completed"].append("export")
         self.pipeline_state["results"]["export"] = export_data
         
-        logger.info(f"✅ Export ready: {len(export_data['data'])} samples in {format_type} format")
+        total_files = len(export_data["exported_files"])
+        logger.info(f"✅ Export complete: {len(samples)} samples saved in {total_files} formats")
+        
         return export_data
     
     def _parse_generation_response(self, response: str, combination: Dict[str, Any]) -> List[Dict[str, Any]]:

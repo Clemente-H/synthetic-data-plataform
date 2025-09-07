@@ -4,6 +4,8 @@ httpx
 pydantic
 python-multipart
 pyyaml==6.0.1
+pandas
+pyarrow
 asyncio
 logging
 datetime
