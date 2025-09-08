@@ -24,6 +24,7 @@ export const usePipelineWebSocket = () => {
   const [overallProgress, setOverallProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
   const [progressData, setProgressData] = useState(null)
+  const [forceRender, setForceRender] = useState(0)
   
   // WebSocket integration
   const {
@@ -110,8 +111,10 @@ export const usePipelineWebSocket = () => {
       setCurrentStep(8)
       setOverallProgress(1.0)
       setFinalResults(message.results)
+      setForceRender(prev => prev + 1) // Force re-render
       console.log('🔥 setFinalResults called with:', message.results)
       console.log('🔥 Should trigger re-render now!')
+      console.log('🔥 forceRender incremented to force update')
       
       // Extract concepts from extraction completion
       if (message.results?.concepts) {
@@ -366,6 +369,7 @@ export const usePipelineWebSocket = () => {
     overallProgress,
     progressMessage,
     progressData,
+    forceRender,
     
     // Pipeline actions
     runFullPipeline,

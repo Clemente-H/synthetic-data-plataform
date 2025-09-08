@@ -29,6 +29,7 @@ const PipelineRealTime = () => {
     overallProgress,
     progressMessage,
     progressData,
+    forceRender,
     runFullPipeline,
     extractConcepts,
     runCharacterization,
@@ -82,6 +83,10 @@ const PipelineRealTime = () => {
     }
   }, [finalResults, isProcessing])
 
+  useEffect(() => {
+    console.log('🔄 forceRender changed:', forceRender)
+  }, [forceRender])
+
   const getStageColor = (stage) => {
     const colors = {
       'input_processing': 'bg-blue-100 text-blue-800',
@@ -126,7 +131,7 @@ const PipelineRealTime = () => {
     return steps[step] || `Step ${step}`
   }
 
-  console.log('🔄 PipelineRealTime RENDER - finalResults:', !!finalResults, 'isProcessing:', isProcessing)
+  console.log('🔄 PipelineRealTime RENDER - finalResults:', !!finalResults, 'isProcessing:', isProcessing, 'forceRender:', forceRender)
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
