@@ -14,7 +14,10 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-EXPORTS_DIR = "exports"
+# Use the same exports directory as the pipeline
+current_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.dirname(current_dir)  # Go up one level from api/ to backend/
+EXPORTS_DIR = os.path.join(backend_dir, "exports")
 
 @router.get("/datasets/list")
 async def list_datasets() -> Dict[str, Any]:

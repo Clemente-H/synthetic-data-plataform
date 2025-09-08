@@ -505,8 +505,12 @@ class PipelineOrchestrator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         # Create exports directory if it doesn't exist
-        exports_dir = "exports"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        backend_dir = os.path.dirname(current_dir)  # Go up one level from core/ to backend/
+        exports_dir = os.path.join(backend_dir, "exports")
         os.makedirs(exports_dir, exist_ok=True)
+        
+        logger.info(f"📁 Using exports directory: {exports_dir}")
         
         export_data = {
             "format": format_type,
@@ -527,7 +531,7 @@ class PipelineOrchestrator:
         }
         
         # Save as JSON (always)
-        json_filename = f"{exports_dir}/dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.json"
+        json_filename = os.path.join(exports_dir, f"dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.json")
         try:
             with open(json_filename, 'w', encoding='utf-8') as f:
                 json.dump({
@@ -536,7 +540,7 @@ class PipelineOrchestrator:
                 }, f, indent=2, ensure_ascii=False)
             export_data["exported_files"].append({
                 "format": "json",
-                "filename": json_filename,
+                "filename": os.path.basename(json_filename),
                 "size_mb": round(os.path.getsize(json_filename) / (1024*1024), 2)
             })
             logger.info(f"✅ JSON export saved: {json_filename}")
@@ -550,12 +554,12 @@ class PipelineOrchestrator:
                 
                 # Convert samples to DataFrame
                 df = pd.json_normalize(samples)
-                parquet_filename = f"{exports_dir}/dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.parquet"
+                parquet_filename = os.path.join(exports_dir, f"dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.parquet")
                 df.to_parquet(parquet_filename, index=False)
                 
                 export_data["exported_files"].append({
                     "format": "parquet", 
-                    "filename": parquet_filename,
+                    "filename": os.path.basename(parquet_filename),
                     "size_mb": round(os.path.getsize(parquet_filename) / (1024*1024), 2)
                 })
                 logger.info(f"✅ Parquet export saved: {parquet_filename}")
@@ -568,12 +572,12 @@ class PipelineOrchestrator:
         try:
             import pandas as pd
             df = pd.json_normalize(samples)
-            csv_filename = f"{exports_dir}/dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.csv"
+            csv_filename = os.path.join(exports_dir, f"dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.csv")
             df.to_csv(csv_filename, index=False)
             
             export_data["exported_files"].append({
                 "format": "csv",
-                "filename": csv_filename, 
+                "filename": os.path.basename(csv_filename), 
                 "size_mb": round(os.path.getsize(csv_filename) / (1024*1024), 2)
             })
             logger.info(f"✅ CSV export saved: {csv_filename}")
