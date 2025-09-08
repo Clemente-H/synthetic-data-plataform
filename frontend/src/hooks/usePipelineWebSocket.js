@@ -100,6 +100,7 @@ export const usePipelineWebSocket = () => {
     const cleanupComplete = onPipelineComplete((message) => {
       console.log('✅ Pipeline complete received:', message)
       console.log('✅ Final results data:', message.results)
+      console.log('✅ Message type check - is full pipeline?:', message.results?.status, message.results?.final_data)
       
       setProgressLog(prev => [...prev, {
         type: 'complete',

@@ -73,8 +73,8 @@ const ResultsModal = ({ isOpen, onClose, finalResults, generatedSamples, onOpenD
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 flex items-center">
-                ✨ Generation Complete!
+              <h2 className="text-3xl font-bold text-gray-900">
+                Generation Complete
               </h2>
               <p className="text-gray-600 mt-2">
                 Successfully generated {samplesCount} synthetic samples in {processingTime.toFixed(1)} minutes
@@ -90,27 +90,27 @@ const ResultsModal = ({ isOpen, onClose, finalResults, generatedSamples, onOpenD
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-green-700">{samplesCount}</div>
-              <div className="text-sm text-green-600">Total Samples</div>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-gray-900">{samplesCount}</div>
+              <div className="text-sm text-gray-600">Total Samples</div>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-blue-700">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-gray-900">
                 {finalResults?.pipeline_metadata?.concepts_extracted || 'N/A'}
               </div>
-              <div className="text-sm text-blue-600">Concepts Used</div>
+              <div className="text-sm text-gray-600">Concepts Used</div>
             </div>
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-purple-700">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-gray-900">
                 {finalResults?.pipeline_metadata?.agents_used || 5}
               </div>
-              <div className="text-sm text-purple-600">AI Agents</div>
+              <div className="text-sm text-gray-600">AI Agents</div>
             </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-orange-700">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-gray-900">
                 {formatFileSize(JSON.stringify(generatedSamples).length)}
               </div>
-              <div className="text-sm text-orange-600">Dataset Size</div>
+              <div className="text-sm text-gray-600">Dataset Size</div>
             </div>
           </div>
 
@@ -149,18 +149,18 @@ const ResultsModal = ({ isOpen, onClose, finalResults, generatedSamples, onOpenD
 
           {/* Exported Files */}
           {exportedFiles.length > 0 && (
-            <div className="mb-8 bg-green-50 border border-green-200 rounded-xl p-4">
-              <h3 className="text-lg font-semibold text-green-800 mb-3">📁 Exported Files</h3>
+            <div className="mb-8 bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Exported Files</h3>
               <div className="space-y-2">
                 {exportedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 border border-green-200">
+                  <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
                     <div>
                       <div className="font-medium text-gray-900 text-sm">{file.filename}</div>
                       <div className="text-xs text-gray-600">{file.format} • {file.samples_count} samples</div>
                     </div>
                     <button
                       onClick={() => window.open(`http://localhost:8000/api/datasets/download/${file.filename}`, '_blank')}
-                      className="text-green-600 hover:text-green-800 text-sm font-medium"
+                      className="text-gray-600 hover:text-gray-800 text-sm font-medium"
                     >
                       Download
                     </button>
@@ -174,27 +174,27 @@ const ResultsModal = ({ isOpen, onClose, finalResults, generatedSamples, onOpenD
           <div className="flex items-center justify-center space-x-4">
             <button
               onClick={() => downloadCurrentResults(selectedExport)}
-              className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center"
+              className="bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition-colors font-medium"
             >
-              📥 Download {selectedExport.toUpperCase()}
+              Download {selectedExport.toUpperCase()}
             </button>
             <button
               onClick={onOpenDatasets}
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-medium"
+              className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
             >
-              📊 View All Datasets
+              View All Datasets
             </button>
             <button
               onClick={onGenerateMore}
-              className="bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-colors font-medium"
+              className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              🔄 Generate More
+              Generate More
             </button>
             <button
               onClick={onReset}
-              className="bg-gray-600 text-white px-6 py-3 rounded-xl hover:bg-gray-700 transition-colors font-medium"
+              className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              🏠 Start Over
+              Start Over
             </button>
           </div>
         </div>

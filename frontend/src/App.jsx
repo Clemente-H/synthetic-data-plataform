@@ -114,12 +114,12 @@ function App() {
     }
   }, [runFullPipeline, inputText, editableConcepts, concepts])
 
-  // Auto-open results modal when generation completes
+  // Auto-open results modal when full pipeline completes (not just characterization)
   useEffect(() => {
-    if (finalResults) {
+    if (finalResults && (generatedSamples?.length > 0 || finalResults.final_data)) {
       setTimeout(() => setShowResultsModal(true), 1000) // Small delay to let user see completion
     }
-  }, [finalResults])
+  }, [finalResults, generatedSamples])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -429,19 +429,19 @@ function App() {
           )}
 
           {/* Results Notification - Show briefly before modal opens */}
-          {finalResults && !showResultsModal && (
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl shadow-lg p-6 border-2 border-green-200 slide-up text-center">
+          {finalResults && (generatedSamples?.length > 0 || finalResults.final_data) && !showResultsModal && (
+            <div className="bg-gray-50 rounded-lg shadow-lg p-6 border border-gray-200 slide-up text-center">
               <div className="text-2xl font-bold text-gray-900 mb-2">
-                ✨ Generation Complete!
+                Generation Complete
               </div>
               <div className="text-gray-600 mb-4">
                 Results are ready! Opening details modal...
               </div>
               <button
                 onClick={() => setShowResultsModal(true)}
-                className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors font-medium"
+                className="bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition-colors font-medium"
               >
-                📊 View Results Now
+                View Results Now
               </button>
             </div>
           )}
