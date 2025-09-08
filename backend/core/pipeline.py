@@ -65,17 +65,8 @@ class PipelineOrchestrator:
         # Pipeline state tracking
         self.current_stage = None
         self.pipeline_state = {}
-        self.websocket_task_id = None
         
         logger.info("🎭 Pipeline Orchestrator initialized with 5 specialized agents + GPU parallelization")
-    
-    async def _send_websocket_update(self, update_data: Dict[str, Any]):
-        """Send WebSocket progress update if task_id is available"""
-        if self.websocket_task_id and WEBSOCKET_AVAILABLE:
-            await send_pipeline_update(
-                task_id=self.websocket_task_id,
-                **update_data
-            )
     
     async def run_full_pipeline(self, 
                                input_text: str,
@@ -100,9 +91,6 @@ class PipelineOrchestrator:
         
         start_time = datetime.now()
         pipeline_id = f"pipeline_{int(start_time.timestamp())}"
-        
-        # Set websocket task ID for real-time updates
-        self.websocket_task_id = websocket_task_id
         
         try:
             logger.info(f"🚀 Starting full pipeline execution (ID: {pipeline_id})")
