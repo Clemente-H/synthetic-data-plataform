@@ -97,7 +97,8 @@ export const usePipelineWebSocket = () => {
     
     // Completion handler
     const cleanupComplete = onPipelineComplete((message) => {
-      console.log('✅ Pipeline complete:', message)
+      console.log('✅ Pipeline complete received:', message)
+      console.log('✅ Final results data:', message.results)
       
       setProgressLog(prev => [...prev, {
         type: 'complete',

@@ -34,7 +34,9 @@ export const useWebSocket = (clientId) => {
       ws.current.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data)
-          console.log('📨 WebSocket message:', message)
+          console.log('📨 WebSocket message received:', message)
+          console.log('📨 Message type:', message.type)
+          console.log('📨 Message task_id:', message.task_id)
           
           // Add to messages history
           setMessages(prev => [...prev.slice(-99), message]) // Keep last 100 messages
