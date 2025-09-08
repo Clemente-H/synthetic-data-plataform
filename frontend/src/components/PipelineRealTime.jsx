@@ -134,7 +134,7 @@ const PipelineRealTime = () => {
   console.log('🔄 PipelineRealTime RENDER - finalResults:', !!finalResults, 'isProcessing:', isProcessing, 'forceRender:', forceRender)
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6 px-4">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-4">
