@@ -454,17 +454,48 @@ const PipelineRealTime = () => {
                 </div>
                 <div className="text-center p-3 bg-purple-50 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
-                    {finalResults.pipeline_metadata?.characterization_dimensions || 0}
+                    {finalResults.pipeline_metadata?.files_exported || 0}
                   </div>
-                  <div className="text-sm text-purple-700">Dimensions</div>
+                  <div className="text-sm text-purple-700">Files</div>
                 </div>
                 <div className="text-center p-3 bg-orange-50 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">
-                    {finalResults.real_duration_minutes || 0}m
+                    {Math.round((finalResults.total_processing_time_seconds || 0) / 60)}m
                   </div>
                   <div className="text-sm text-orange-700">Duration</div>
                 </div>
               </div>
+              
+              {/* Exported Files */}
+              {finalResults.exported_files && finalResults.exported_files.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-medium text-gray-800 mb-2">📁 Exported Files</h4>
+                  <div className="space-y-2">
+                    {finalResults.exported_files.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            file.format === 'json' ? 'bg-blue-100 text-blue-800' :
+                            file.format === 'parquet' ? 'bg-green-100 text-green-800' :
+                            file.format === 'csv' ? 'bg-orange-100 text-orange-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {file.format.toUpperCase()}
+                          </span>
+                          <span className="text-sm text-gray-700">{file.filename}</span>
+                          <span className="text-xs text-gray-500">{file.size_mb} MB</span>
+                        </div>
+                        <button
+                          onClick={() => downloadDataset(file.filename)}
+                          className="px-2 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 text-xs"
+                        >
+                          ⬇
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <details>
                 <summary className="cursor-pointer text-gray-600 hover:text-gray-800 font-medium">

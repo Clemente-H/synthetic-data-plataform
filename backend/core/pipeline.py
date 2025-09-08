@@ -6,6 +6,8 @@ Pipeline Orchestrator - Coordinates all steps (1-8) of the synthetic data genera
 from typing import Dict, List, Any, Optional, Callable
 import logging
 import asyncio
+import os
+import json
 from datetime import datetime
 from enum import Enum
 
@@ -149,13 +151,16 @@ class PipelineOrchestrator:
                 "total_processing_time_seconds": total_time,
                 "stages_completed": len(self.pipeline_state["stages_completed"]),
                 "final_data": export_data,
+                "exported_files": export_data.get("exported_files", []),
                 "pipeline_metadata": {
                     "input_length": len(input_text),
                     "concepts_extracted": len(concepts),
                     "characterization_dimensions": len(characterization),
                     "total_samples_generated": len(quality_data.get("samples", [])),
                     "format_type": format_type,
-                    "agents_used": list(self.agents.keys())
+                    "agents_used": list(self.agents.keys()),
+                    "files_exported": len(export_data.get("exported_files", [])),
+                    "total_export_size_mb": sum(f.get("size_mb", 0) for f in export_data.get("exported_files", []))
                 }
             }
             
@@ -500,7 +505,6 @@ class PipelineOrchestrator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         # Create exports directory if it doesn't exist
-        import os
         exports_dir = "exports"
         os.makedirs(exports_dir, exist_ok=True)
         
@@ -525,7 +529,6 @@ class PipelineOrchestrator:
         # Save as JSON (always)
         json_filename = f"{exports_dir}/dataset_{format_type}_{timestamp}_{pipeline_id[-8:]}.json"
         try:
-            import json
             with open(json_filename, 'w', encoding='utf-8') as f:
                 json.dump({
                     "samples": samples,
