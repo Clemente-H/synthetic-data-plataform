@@ -137,8 +137,9 @@ export const usePipelineWebSocket = () => {
       }
       
       // Extract final data from full pipeline results
-      if (message.results?.final_data?.samples) {
-        setGeneratedSamples(message.results.final_data.samples)
+      if (message.results?.final_data?.data) {
+        console.log('🔥 Setting generatedSamples with:', message.results.final_data.data.length, 'samples')
+        setGeneratedSamples(message.results.final_data.data)
       }
       
       if (message.results?.pipeline_metadata?.concepts_extracted) {
