@@ -117,6 +117,8 @@ export const usePipelineWebSocket = () => {
       console.log('🔥 forceRender incremented to force update')
       console.log('🔥 message.results structure:', JSON.stringify(Object.keys(message.results || {})))
       console.log('🔥 Looking for samples in final_data:', message.results?.final_data)
+      console.log('🔥 final_data keys:', Object.keys(message.results?.final_data || {}))
+      console.log('🔥 final_data.samples:', message.results?.final_data?.samples)
       console.log('🔥 All result keys:', Object.keys(message.results || {}))
       
       // Extract concepts from extraction completion

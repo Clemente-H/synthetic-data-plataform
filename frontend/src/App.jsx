@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import InputSection from './components/InputSection'
 import ConceptContainer from './components/ConceptContainer'
 import GenerationModal from './components/GenerationModal'
+import ResultsModal from './components/ResultsModal'
 import StageIndicator from './components/StageIndicator'
 import DatasetSidebar from './components/DatasetSidebar'
 import { usePipelineWebSocket } from './hooks/usePipelineWebSocket'
@@ -31,6 +32,7 @@ function App() {
   } = usePipelineWebSocket()
 
   const [showGenerationModal, setShowGenerationModal] = useState(false)
+  const [showResultsModal, setShowResultsModal] = useState(false)
   const [showDatasetSidebar, setShowDatasetSidebar] = useState(false)
   const [selectedConcepts, setSelectedConcepts] = useState([])
   const [editableConcepts, setEditableConcepts] = useState([])
@@ -112,12 +114,12 @@ function App() {
     }
   }, [runFullPipeline, inputText, editableConcepts, concepts])
 
-  // Auto-open sidebar when generation completes
+  // Auto-open results modal when generation completes
   useEffect(() => {
-    if (finalResults && generatedSamples && generatedSamples.length > 0) {
-      setTimeout(() => setShowDatasetSidebar(true), 1000) // Small delay to let user see completion
+    if (finalResults) {
+      setTimeout(() => setShowResultsModal(true), 1000) // Small delay to let user see completion
     }
-  }, [finalResults, generatedSamples])
+  }, [finalResults])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -426,75 +428,21 @@ function App() {
             </div>
           )}
 
-          {/* Results Section - Show after generation complete */}
-          {generatedSamples && generatedSamples.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-lg p-8 border slide-up">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    ✨ Generation Complete!
-                  </h2>
-                  <p className="text-gray-600 mt-1">
-                    Successfully generated {generatedSamples.length} synthetic samples
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowDatasetSidebar(true)}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center"
-                >
-                  📊 View Datasets
-                </button>
+          {/* Results Notification - Show briefly before modal opens */}
+          {finalResults && !showResultsModal && (
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl shadow-lg p-6 border-2 border-green-200 slide-up text-center">
+              <div className="text-2xl font-bold text-gray-900 mb-2">
+                ✨ Generation Complete!
               </div>
-
-              {/* Sample Preview */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                <h3 className="font-semibold text-gray-800 mb-3">Sample Preview:</h3>
-                <div className="bg-white rounded border p-3 text-sm font-mono max-h-40 overflow-y-auto">
-                  {generatedSamples[0] ? JSON.stringify(generatedSamples[0], null, 2) : 'No sample data available'}
-                </div>
+              <div className="text-gray-600 mb-4">
+                Results are ready! Opening details modal...
               </div>
-
-              {/* Generation Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-green-700">{generatedSamples.length}</div>
-                  <div className="text-sm text-green-600">Total Samples</div>
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-blue-700">{concepts.length}</div>
-                  <div className="text-sm text-blue-600">Concepts Used</div>
-                </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-purple-700">{Object.keys(characterization).length}</div>
-                  <div className="text-sm text-purple-600">Dimensions</div>
-                </div>
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-orange-700">
-                    {((generatedSamples.length > 0 ? JSON.stringify(generatedSamples).length : 0) / 1024).toFixed(1)}KB
-                  </div>
-                  <div className="text-sm text-orange-600">Dataset Size</div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center justify-center mt-6 space-x-4">
-                <button
-                  onClick={() => {
-                    // Reset to generate again
-                    setGeneratedSamples([])
-                    setShowGenerationModal(true)
-                  }}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Generate More
-                </button>
-                <button
-                  onClick={reset}
-                  className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                >
-                  Start Over
-                </button>
-              </div>
+              <button
+                onClick={() => setShowResultsModal(true)}
+                className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors font-medium"
+              >
+                📊 View Results Now
+              </button>
             </div>
           )}
         </div>
@@ -520,6 +468,27 @@ function App() {
           characterization={characterization}
         />
       )}
+
+      {/* Results Modal */}
+      <ResultsModal
+        isOpen={showResultsModal}
+        onClose={() => setShowResultsModal(false)}
+        finalResults={finalResults}
+        generatedSamples={generatedSamples}
+        onOpenDatasets={() => {
+          setShowResultsModal(false)
+          setShowDatasetSidebar(true)
+        }}
+        onGenerateMore={() => {
+          setShowResultsModal(false)
+          setGeneratedSamples([])
+          setShowGenerationModal(true)
+        }}
+        onReset={() => {
+          setShowResultsModal(false)
+          reset()
+        }}
+      />
 
       {/* Dataset Sidebar */}
       <DatasetSidebar
