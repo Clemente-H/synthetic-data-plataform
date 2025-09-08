@@ -72,7 +72,11 @@ const PipelineRealTime = () => {
   }, [])
 
   useEffect(() => {
+    console.log('🎯 finalResults changed:', finalResults)
+    console.log('🎯 isProcessing:', isProcessing)
+    
     if (finalResults && !isProcessing) {
+      console.log('🎯 Refreshing datasets list...')
       // Refresh datasets list after pipeline completes
       setTimeout(loadDatasets, 1000)
     }
@@ -436,7 +440,8 @@ const PipelineRealTime = () => {
           )}
 
           {/* Final Results */}
-          {finalResults && (
+          {console.log('🔥 RENDER: finalResults exists?', !!finalResults)}
+          {finalResults ? (
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-bold mb-4">🎉 Final Results</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -506,7 +511,7 @@ const PipelineRealTime = () => {
                 </pre>
               </details>
             </div>
-          )}
+          ) : console.log('🔥 RENDER: No finalResults to show')}
 
           {/* Available Datasets */}
           <div className="bg-white rounded-lg shadow-lg p-6">

@@ -110,6 +110,8 @@ export const usePipelineWebSocket = () => {
       setCurrentStep(8)
       setOverallProgress(1.0)
       setFinalResults(message.results)
+      console.log('🔥 setFinalResults called with:', message.results)
+      console.log('🔥 Should trigger re-render now!')
       
       // Extract concepts from extraction completion
       if (message.results?.concepts) {
