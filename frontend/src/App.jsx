@@ -3,6 +3,7 @@ import InputSection from './components/InputSection'
 import ConceptContainer from './components/ConceptContainer'
 import GenerationModal from './components/GenerationModal'
 import StageIndicator from './components/StageIndicator'
+import DatasetSidebar from './components/DatasetSidebar'
 import { usePipelineWebSocket } from './hooks/usePipelineWebSocket'
 
 function App() {
@@ -16,8 +17,11 @@ function App() {
     setCharacterization,
     generatedSamples,
     setGeneratedSamples,
+    finalResults,
     currentStage,
     overallProgress,
+    progressMessage,
+    progressData,
     inputText,
     setInputText,
     extractConcepts,
@@ -27,6 +31,7 @@ function App() {
   } = usePipelineWebSocket()
 
   const [showGenerationModal, setShowGenerationModal] = useState(false)
+  const [showDatasetSidebar, setShowDatasetSidebar] = useState(false)
   const [selectedConcepts, setSelectedConcepts] = useState([])
   const [editableConcepts, setEditableConcepts] = useState([])
   const [newConceptText, setNewConceptText] = useState('')
@@ -106,6 +111,13 @@ function App() {
       // Keep modal open on error so user can retry
     }
   }, [runFullPipeline, inputText, editableConcepts, concepts])
+
+  // Auto-open sidebar when generation completes
+  useEffect(() => {
+    if (finalResults && generatedSamples && generatedSamples.length > 0) {
+      setTimeout(() => setShowDatasetSidebar(true), 1000) // Small delay to let user see completion
+    }
+  }, [finalResults, generatedSamples])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -427,19 +439,10 @@ function App() {
                   </p>
                 </div>
                 <button
-                  onClick={() => {
-                    const dataStr = JSON.stringify(generatedSamples, null, 2)
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' })
-                    const url = URL.createObjectURL(dataBlob)
-                    const link = document.createElement('a')
-                    link.href = url
-                    link.download = `synthetic-dataset-${new Date().toISOString().slice(0, 10)}.json`
-                    link.click()
-                    URL.revokeObjectURL(url)
-                  }}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center"
+                  onClick={() => setShowDatasetSidebar(true)}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center"
                 >
-                  📥 Download Dataset
+                  📊 View Datasets
                 </button>
               </div>
 
@@ -504,6 +507,8 @@ function App() {
         isProcessing={isProcessing}
         isConnected={isConnected}
         error={error}
+        progressMessage={progressMessage}
+        progressData={progressData}
       />
 
       {/* Generation Modal */}
@@ -515,6 +520,14 @@ function App() {
           characterization={characterization}
         />
       )}
+
+      {/* Dataset Sidebar */}
+      <DatasetSidebar
+        isOpen={showDatasetSidebar}
+        onClose={() => setShowDatasetSidebar(false)}
+        finalResults={finalResults}
+        generatedSamples={generatedSamples}
+      />
     </div>
   )
 }
