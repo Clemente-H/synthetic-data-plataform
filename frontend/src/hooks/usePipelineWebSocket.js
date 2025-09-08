@@ -373,4 +373,9 @@ export const usePipelineWebSocket = () => {
     runCharacterization,
     reset
   }
+  
+  // Debug logging
+  console.log('🔄 usePipelineWebSocket RETURN - finalResults:', !!result.finalResults, 'isProcessing:', result.isProcessing)
+  
+  return result
 }

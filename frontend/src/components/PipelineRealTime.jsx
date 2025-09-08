@@ -126,6 +126,8 @@ const PipelineRealTime = () => {
     return steps[step] || `Step ${step}`
   }
 
+  console.log('🔄 PipelineRealTime RENDER - finalResults:', !!finalResults, 'isProcessing:', isProcessing)
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
