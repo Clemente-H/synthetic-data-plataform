@@ -33,6 +33,13 @@ echo "================================================="
 # Obtener la ruta absoluta del directorio raíz del proyecto.
 PROJECT_ROOT=$(pwd)
 
+# Activar el entorno de micromamba antes de lanzar los servicios.
+echo "-> Activando entorno de micromamba 'py311'..."
+# Esta es la forma estándar y robusta de inicializar micromamba en un script.
+# Asume que 'micromamba' está en el PATH del sistema.
+eval "$(micromamba shell hook -s bash)"
+micromamba activate py311
+
 # Limpiar logs antiguos antes de empezar
 rm -f ollama.log backend.log frontend.log
 
@@ -44,6 +51,7 @@ ollama serve > ollama.log 2>&1 &
 sleep 5 # Espera para que Ollama se inicie
 
 echo "-> Lanzando Backend (logs en backend.log)..."
+# Ahora python se ejecutará dentro del entorno 'py311'
 python ${PROJECT_ROOT}/backend/main.py > backend.log 2>&1 &
 
 echo "-> Lanzando Frontend (logs en frontend.log)..."
