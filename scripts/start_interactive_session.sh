@@ -2,8 +2,6 @@
 #
 # Script para iniciar una sesión de desarrollo interactiva en un clúster SLURM.
 #
-# Este script solicita recursos a SLURM y luego proporciona una shell interactiva
-# con instrucciones para iniciar manualmente los servicios.
 
 # --- Configuración de Recursos para SLURM ---
 GPUS_REQUESTED=1          # Número de GPUs que quieres solicitar (puedes poner 4 si lo necesitas)
@@ -17,61 +15,25 @@ TIME_LIMIT="02:00:00"     # Límite de tiempo para la sesión (HH:MM:SS)
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 
-# Crear un script temporal que srun ejecutará.
-# Esto evita el error "File name too long".
-TMP_SCRIPT=$(mktemp /tmp/slurm_job_script.XXXXXX || exit 1)
-
-# Escribir los comandos en el script temporal.
-# Usamos 'EOF' entre comillas para que las variables como $PROJECT_ROOT
-# se pasen literalmente y se expandan dentro del script temporal.
-cat > "$TMP_SCRIPT" <<EOF
-#!/bin/bash
-# Este es el script temporal que se ejecuta dentro del nodo de SLURM.
-
-export PROJECT_ROOT="$PROJECT_ROOT"
-
+# 1. Imprimir las instrucciones ANTES de iniciar srun.
 echo "================================================="
-echo "✅ Sesión interactiva de SLURM iniciada."
+echo "✅ Preparando para iniciar sesión interactiva de SLURM."
 echo "================================================="
 echo ""
-echo "El entorno está listo. Ahora puedes iniciar los servicios manualmente."
-echo "Recuerda usar '&' para lanzarlos en segundo plano."
+echo "La siguiente pantalla solicitará los recursos a SLURM."
+echo "Una vez que se conecte, tu terminal actual se convertirá en la consola del nodo de cómputo."
 echo ""
-echo "--- Comandos sugeridos ---"
-echo ""
-echo "# Para iniciar Ollama:"
-echo "ollama serve &"
-echo ""
-echo "# Para iniciar el Backend:"
-echo "python \$PROJECT_ROOT/backend/main.py &"
-echo ""
-echo "# Para iniciar el Frontend:"
-echo "npm --prefix \$PROJECT_ROOT/frontend run dev &"
-echo ""
-echo "# Para ver los trabajos en segundo plano:"
-echo "jobs"
-echo ""
+echo "--- Comandos para ejecutar DENTRO de la nueva consola ---"
+echo "1. Iniciar Ollama:      ollama serve &"
+echo "2. Iniciar Backend:      python ${PROJECT_ROOT}/backend/main.py &"
+echo "3. Iniciar Frontend:     npm --prefix ${PROJECT_ROOT}/frontend run dev &"
 echo "-------------------------------------------------"
 echo ""
-echo "Para terminar la sesión y detener todos los servicios, simplemente escribe: exit"
-echo ""
 
-# Iniciar una sesión de bash interactiva.
-# 'exec' reemplaza el proceso actual, por lo que al salir de bash, la sesión termina.
-# El flag '-i' es crucial para forzar que la shell sea interactiva.
-exec bash -i
-EOF
-
-# Hacer que el script temporal sea ejecutable.
-chmod +x "$TMP_SCRIPT"
-
-# --- Ejecución de srun ---
+# 2. Ejecutar srun con el comando más simple y robusto.
+#    Esto inicia una shell de bash interactiva directamente.
 echo "Solicitando una sesión interactiva a SLURM... Puede tardar unos momentos."
+srun --gpus=$GPUS_REQUESTED --cpus-per-task=$CPUS_REQUESTED --mem=$MEM_REQUESTED --time=$TIME_LIMIT --pty bash -i
 
-# srun ejecutará el script temporal, que a su vez iniciará una shell interactiva.
-srun --gpus=$GPUS_REQUESTED --cpus-per-task=$CPUS_REQUESTED --mem=$MEM_REQUESTED --time=$TIME_LIMIT --pty "$TMP_SCRIPT"
-
-# --- Limpieza ---
-# Esto se ejecuta después de que salgas de la sesión de srun.
-rm "$TMP_SCRIPT"
+echo ""
 echo "Sesión de SLURM finalizada. Todos los recursos han sido liberados."
