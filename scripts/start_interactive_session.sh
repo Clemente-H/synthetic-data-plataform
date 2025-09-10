@@ -14,7 +14,6 @@ TIME_LIMIT="02:00:00"     # Límite de tiempo para la sesión (HH:MM:SS)
 # --- Lógica del Script ---
 
 # Obtener la ruta absoluta del directorio raíz del proyecto.
-# Esto hace que el script sea portable y no dependa de rutas fijas.
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 
