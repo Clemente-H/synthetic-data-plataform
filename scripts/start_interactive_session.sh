@@ -58,7 +58,8 @@ echo ""
 
 # Iniciar una sesión de bash interactiva.
 # 'exec' reemplaza el proceso actual, por lo que al salir de bash, la sesión termina.
-exec bash
+# El flag '-i' es crucial para forzar que la shell sea interactiva.
+exec bash -i
 EOF
 
 # Hacer que el script temporal sea ejecutable.
