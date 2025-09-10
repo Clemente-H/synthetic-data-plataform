@@ -40,25 +40,39 @@ class PromptLoader:
         """
         Load and format a prompt with given variables
         """
-        prompt_data = self.load_prompt(category, prompt_name)
+        import logging
+        logger = logging.getLogger(__name__)
         
-        # Format both system and user prompts
-        formatted = {}
-        
-        if 'system_prompt' in prompt_data:
-            formatted['system'] = prompt_data['system_prompt'].format(**kwargs)
-        
-        if 'user_prompt' in prompt_data:
-            formatted['user'] = prompt_data['user_prompt'].format(**kwargs)
-        
-        # Include validation and fallback data
-        if 'validation' in prompt_data:
-            formatted['validation'] = prompt_data['validation']
-        
-        if 'fallback_suggestions' in prompt_data:
-            formatted['fallback'] = prompt_data['fallback_suggestions']
-        
-        return formatted
+        try:
+            prompt_data = self.load_prompt(category, prompt_name)
+            logger.info(f"📄 Loaded prompt: {category}/{prompt_name}")
+            
+            # Format both system and user prompts
+            formatted = {}
+            
+            if 'system_prompt' in prompt_data:
+                logger.info(f"🔧 Formatting system prompt with {len(kwargs)} variables")
+                formatted['system'] = prompt_data['system_prompt'].format(**kwargs)
+                logger.info(f"✅ System prompt formatted successfully")
+            
+            if 'user_prompt' in prompt_data:
+                logger.info(f"🔧 Formatting user prompt with variables: {list(kwargs.keys())}")
+                formatted['user'] = prompt_data['user_prompt'].format(**kwargs)
+                logger.info(f"✅ User prompt formatted successfully, length: {len(formatted['user'])}")
+            
+            # Include validation and fallback data
+            if 'validation' in prompt_data:
+                formatted['validation'] = prompt_data['validation']
+            
+            if 'fallback_suggestions' in prompt_data:
+                formatted['fallback'] = prompt_data['fallback_suggestions']
+            
+            return formatted
+            
+        except Exception as e:
+            logger.error(f"❌ Error in format_prompt({category}/{prompt_name}): {e}")
+            logger.error(f"Variables passed: {kwargs}")
+            raise e
     
     def get_generation_template(self, format_type: str, concepts: Dict[str, List[str]], 
                               complexity_level: int = 1, samples_per_combination: int = 5) -> Dict[str, str]:

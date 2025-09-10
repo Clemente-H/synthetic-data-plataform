@@ -16,6 +16,7 @@ from api.generation import router as generation_router
 from api.validation import router as validation_router
 from api.websocket import router as websocket_router
 from api.pipeline_websocket import router as pipeline_websocket_router
+from api.datasets import router as datasets_router
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -88,6 +89,7 @@ app.include_router(generation_router, prefix="/api/generation", tags=["generatio
 app.include_router(validation_router, prefix="/api/validation", tags=["validation"])
 app.include_router(websocket_router, prefix="/api", tags=["websocket"])
 app.include_router(pipeline_websocket_router, prefix="/api/pipeline", tags=["pipeline-websocket"])
+app.include_router(datasets_router, prefix="/api", tags=["datasets"])
 
 if __name__ == "__main__":
     import uvicorn

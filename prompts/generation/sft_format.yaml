@@ -4,41 +4,21 @@ system_prompt: |
   Create diverse, realistic instructions with comprehensive, accurate responses that demonstrate the desired behavior.
 
 user_prompt: |
-  Generate {samples_per_combination} SFT instruction-response pairs using these concepts:
+  Simulate {samples_per_combination} realistic conversations based on this context combination:
   
-  **Core Concepts:** {core_concepts}
-  **Geographic Context:** {geographic_context}
-  **Cultural Context:** {cultural_context}
-  **Linguistic Context:** {linguistic_context}
-  **Persona Context:** {persona_context}
-  **Domain Context:** {domain_context}
-  **Complexity Level:** {complexity_level}
+  Context: {geographic_context} + {cultural_context} + {linguistic_context} + {persona_context} + {domain_context}
+  Core topics: {core_concepts}
   
-  Create instructions that:
-  - Naturally incorporate the given concepts and contexts
-  - Vary in complexity based on the complexity level
-  - Reflect the specified persona and cultural context
-  - Use appropriate linguistic style and terminology
-  - Cover different instruction types (questions, tasks, requests, explanations)
+  Create natural conversations where the persona asks questions or makes requests, and receives contextually appropriate responses that reflect the geographic, cultural, linguistic, and domain contexts.
   
-  Responses should be:
-  - Comprehensive and accurate
-  - Appropriate for the persona and context
-  - Demonstrate desired AI behavior
-  - Match the linguistic style and formality level
+  Examples of persona interactions:
+  - Asking for advice or information
+  - Seeking help with a problem  
+  - Requesting explanations
+  - Sharing experiences and getting responses
   
-  Format as JSON array:
-  ```json
-  [
-    {
-      "instruction": "...",
-      "response": "...",
-      "concepts_used": [...],
-      "instruction_type": "question|task|request|explanation",
-      "complexity": {complexity_level}
-    }
-  ]
-  ```
+  Respond with ONLY a valid JSON array:
+  [{{"instruction": "natural question or request from persona", "response": "contextually appropriate answer"}}]
 
 validation:
   required_fields: ["instruction", "response"]

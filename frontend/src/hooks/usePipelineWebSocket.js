@@ -22,6 +22,9 @@ export const usePipelineWebSocket = () => {
   const [progressLog, setProgressLog] = useState([])
   const [currentStage, setCurrentStage] = useState(null)
   const [overallProgress, setOverallProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
+  const [progressData, setProgressData] = useState(null)
+  const [forceRender, setForceRender] = useState(0)
   
   // WebSocket integration
   const {
@@ -64,6 +67,8 @@ export const usePipelineWebSocket = () => {
       
       setCurrentStage(message.stage)
       setOverallProgress(message.progress || 0)
+      setProgressMessage(message.message || '')
+      setProgressData(message.data || null)
       
       // Update pipeline step based on stage
       const stageToStep = {
@@ -93,7 +98,9 @@ export const usePipelineWebSocket = () => {
     
     // Completion handler
     const cleanupComplete = onPipelineComplete((message) => {
-      console.log('✅ Pipeline complete:', message)
+      console.log('✅ Pipeline complete received:', message)
+      console.log('✅ Final results data:', message.results)
+      console.log('✅ Message type check - is full pipeline?:', message.results?.status, message.results?.final_data)
       
       setProgressLog(prev => [...prev, {
         type: 'complete',
@@ -105,6 +112,15 @@ export const usePipelineWebSocket = () => {
       setCurrentStep(8)
       setOverallProgress(1.0)
       setFinalResults(message.results)
+      setForceRender(prev => prev + 1) // Force re-render
+      console.log('🔥 setFinalResults called with:', message.results)
+      console.log('🔥 Should trigger re-render now!')
+      console.log('🔥 forceRender incremented to force update')
+      console.log('🔥 message.results structure:', JSON.stringify(Object.keys(message.results || {})))
+      console.log('🔥 Looking for samples in final_data:', message.results?.final_data)
+      console.log('🔥 final_data keys:', Object.keys(message.results?.final_data || {}))
+      console.log('🔥 final_data.samples:', message.results?.final_data?.samples)
+      console.log('🔥 All result keys:', Object.keys(message.results || {}))
       
       // Extract concepts from extraction completion
       if (message.results?.concepts) {
@@ -121,8 +137,9 @@ export const usePipelineWebSocket = () => {
       }
       
       // Extract final data from full pipeline results
-      if (message.results?.final_data?.samples) {
-        setGeneratedSamples(message.results.final_data.samples)
+      if (message.results?.final_data?.data) {
+        console.log('🔥 Setting generatedSamples with:', message.results.final_data.data.length, 'samples')
+        setGeneratedSamples(message.results.final_data.data)
       }
       
       if (message.results?.pipeline_metadata?.concepts_extracted) {
@@ -357,6 +374,9 @@ export const usePipelineWebSocket = () => {
     progressLog,
     currentStage,
     overallProgress,
+    progressMessage,
+    progressData,
+    forceRender,
     
     // Pipeline actions
     runFullPipeline,
@@ -364,4 +384,9 @@ export const usePipelineWebSocket = () => {
     runCharacterization,
     reset
   }
+  
+  // Debug logging
+  console.log('🔄 usePipelineWebSocket RETURN - finalResults:', !!result.finalResults, 'isProcessing:', result.isProcessing)
+  
+  return result
 }

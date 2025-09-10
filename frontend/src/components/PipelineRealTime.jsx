@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePipelineWebSocket } from '../hooks/usePipelineWebSocket'
+import StageIndicator from './StageIndicator'
 
 const PipelineRealTime = () => {
   const [inputText, setInputText] = useState(
@@ -11,6 +12,8 @@ const PipelineRealTime = () => {
     max_total_samples: 50,
     max_concepts: 30
   })
+  const [datasets, setDatasets] = useState([])
+  const [loadingDatasets, setLoadingDatasets] = useState(false)
 
   const {
     isConnected,
@@ -24,6 +27,9 @@ const PipelineRealTime = () => {
     progressLog,
     currentStage,
     overallProgress,
+    progressMessage,
+    progressData,
+    forceRender,
     runFullPipeline,
     extractConcepts,
     runCharacterization,
@@ -40,6 +46,46 @@ const PipelineRealTime = () => {
   const handleConceptsOnly = async () => {
     await extractConcepts(inputText)
   }
+
+  // Load available datasets
+  const loadDatasets = async () => {
+    setLoadingDatasets(true)
+    try {
+      const response = await fetch('http://localhost:8000/api/datasets/list')
+      const data = await response.json()
+      setDatasets(data.datasets || [])
+    } catch (error) {
+      console.error('Failed to load datasets:', error)
+    } finally {
+      setLoadingDatasets(false)
+    }
+  }
+
+  // Download dataset
+  const downloadDataset = (filename) => {
+    const downloadUrl = `http://localhost:8000/api/datasets/download/${filename}`
+    window.open(downloadUrl, '_blank')
+  }
+
+  // Load datasets on component mount and after pipeline completes
+  useEffect(() => {
+    loadDatasets()
+  }, [])
+
+  useEffect(() => {
+    console.log('🎯 finalResults changed:', finalResults)
+    console.log('🎯 isProcessing:', isProcessing)
+    
+    if (finalResults && !isProcessing) {
+      console.log('🎯 Refreshing datasets list...')
+      // Refresh datasets list after pipeline completes
+      setTimeout(loadDatasets, 1000)
+    }
+  }, [finalResults, isProcessing])
+
+  useEffect(() => {
+    console.log('🔄 forceRender changed:', forceRender)
+  }, [forceRender])
 
   const getStageColor = (stage) => {
     const colors = {
@@ -85,8 +131,10 @@ const PipelineRealTime = () => {
     return steps[step] || `Step ${step}`
   }
 
+  console.log('🔄 PipelineRealTime RENDER - finalResults:', !!finalResults, 'isProcessing:', isProcessing, 'forceRender:', forceRender)
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6 px-4">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-4">
@@ -399,7 +447,8 @@ const PipelineRealTime = () => {
           )}
 
           {/* Final Results */}
-          {finalResults && (
+          {console.log('🔥 RENDER: finalResults exists?', !!finalResults)}
+          {finalResults ? (
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-bold mb-4">🎉 Final Results</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -417,17 +466,48 @@ const PipelineRealTime = () => {
                 </div>
                 <div className="text-center p-3 bg-purple-50 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
-                    {finalResults.pipeline_metadata?.characterization_dimensions || 0}
+                    {finalResults.pipeline_metadata?.files_exported || 0}
                   </div>
-                  <div className="text-sm text-purple-700">Dimensions</div>
+                  <div className="text-sm text-purple-700">Files</div>
                 </div>
                 <div className="text-center p-3 bg-orange-50 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">
-                    {finalResults.real_duration_minutes || 0}m
+                    {Math.round((finalResults.total_processing_time_seconds || 0) / 60)}m
                   </div>
                   <div className="text-sm text-orange-700">Duration</div>
                 </div>
               </div>
+              
+              {/* Exported Files */}
+              {finalResults.exported_files && finalResults.exported_files.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-medium text-gray-800 mb-2">📁 Exported Files</h4>
+                  <div className="space-y-2">
+                    {finalResults.exported_files.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            file.format === 'json' ? 'bg-blue-100 text-blue-800' :
+                            file.format === 'parquet' ? 'bg-green-100 text-green-800' :
+                            file.format === 'csv' ? 'bg-orange-100 text-orange-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {file.format.toUpperCase()}
+                          </span>
+                          <span className="text-sm text-gray-700">{file.filename}</span>
+                          <span className="text-xs text-gray-500">{file.size_mb} MB</span>
+                        </div>
+                        <button
+                          onClick={() => downloadDataset(file.filename)}
+                          className="px-2 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 text-xs"
+                        >
+                          ⬇
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <details>
                 <summary className="cursor-pointer text-gray-600 hover:text-gray-800 font-medium">
@@ -438,9 +518,82 @@ const PipelineRealTime = () => {
                 </pre>
               </details>
             </div>
-          )}
+          ) : console.log('🔥 RENDER: No finalResults to show')}
+
+          {/* Available Datasets */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">💾 Generated Datasets</h3>
+              <button
+                onClick={loadDatasets}
+                disabled={loadingDatasets}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm disabled:opacity-50"
+              >
+                {loadingDatasets ? '🔄' : '↻'} Refresh
+              </button>
+            </div>
+
+            {datasets.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                <div className="text-3xl mb-2">📁</div>
+                <p>No datasets generated yet</p>
+                <p className="text-sm mt-1">Run the pipeline to generate your first dataset</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {datasets.map((dataset, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">
+                        {dataset.format_type.toUpperCase()} Dataset
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {dataset.file_format} • {dataset.size_mb} MB
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(dataset.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        dataset.file_format === 'json' ? 'bg-blue-100 text-blue-800' :
+                        dataset.file_format === 'parquet' ? 'bg-green-100 text-green-800' :
+                        dataset.file_format === 'csv' ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {dataset.file_format}
+                      </span>
+                      <button
+                        onClick={() => downloadDataset(dataset.filename)}
+                        className="px-3 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 text-sm"
+                      >
+                        ⬇ Download
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {datasets.length > 0 && (
+              <div className="mt-4 text-xs text-gray-500 text-center">
+                Total: {datasets.length} datasets • {datasets.reduce((sum, d) => sum + d.size_mb, 0).toFixed(2)} MB
+              </div>
+            )}
+          </div>
         </div>
       </div>
+      
+      {/* Floating Stage Indicator */}
+      <StageIndicator 
+        currentStage={currentStage}
+        overallProgress={overallProgress}
+        isProcessing={isProcessing}
+        isConnected={isConnected}
+        error={error}
+        progressMessage={progressMessage}
+        progressData={progressData}
+      />
     </div>
   )
 }

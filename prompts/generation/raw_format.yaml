@@ -4,37 +4,17 @@ system_prompt: |
   and contexts naturally. Generate realistic text that could be used for language model training.
 
 user_prompt: |
-  Generate {samples_per_combination} diverse text samples using these concepts:
+  Generate {samples_per_combination} realistic text samples based on this context combination:
   
-  **Core Concepts:** {core_concepts}
-  **Geographic Context:** {geographic_context}
-  **Cultural Context:** {cultural_context}
-  **Linguistic Context:** {linguistic_context}
-  **Persona Context:** {persona_context}
-  **Domain Context:** {domain_context}
-  **Complexity Level:** {complexity_level}
+  Context: {geographic_context} + {cultural_context} + {linguistic_context} + {persona_context} + {domain_context}
+  Core topics: {core_concepts}
   
-  Create text samples that:
-  - Naturally incorporate the specified concepts
-  - Reflect the geographic and cultural context
-  - Match the persona and linguistic style
-  - Vary in format (paragraphs, dialogues, descriptions, explanations)
-  - Scale complexity based on the complexity level
-  - Are realistic and could occur in real-world scenarios
+  Create natural text that this persona would write, say, or encounter in their context. Text should authentically reflect their geographic location, cultural background, linguistic style, and domain expertise.
   
-  Each sample should be 1-3 paragraphs of coherent, contextually appropriate text.
+  Vary the format: conversations, social media posts, forum discussions, emails, articles, personal reflections, etc.
   
-  Format as JSON array:
-  ```json
-  [
-    {
-      "text": "Sample text content here...",
-      "concepts_used": [...],
-      "text_type": "paragraph|dialogue|description|explanation",
-      "complexity": {complexity_level}
-    }
-  ]
-  ```
+  Respond with ONLY a valid JSON array:
+  [{{"text": "realistic contextual content from this persona's world"}}]
 
 validation:
   required_fields: ["text"]

@@ -117,11 +117,15 @@ class BaseAgent(ABC):
     
     def validate_suggestions(self, suggestions: List[str]) -> List[str]:
         """
-        Validate and filter suggestions
+        Validate and filter suggestions - more lenient validation
         """
         validated = []
         for suggestion in suggestions:
-            if isinstance(suggestion, str) and 2 < len(suggestion.strip()) < 100:
-                validated.append(suggestion.strip())
+            if isinstance(suggestion, str) and len(suggestion.strip()) > 2:
+                # Remove extra long suggestions but allow reasonable length
+                suggestion_clean = suggestion.strip()
+                if len(suggestion_clean) > 200:
+                    suggestion_clean = suggestion_clean[:200] + "..."
+                validated.append(suggestion_clean)
         
         return list(set(validated))  # Remove duplicates
