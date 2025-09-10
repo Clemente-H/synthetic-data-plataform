@@ -13,46 +13,25 @@ system_prompt: |
   - Legal and regulatory differences
 
 user_prompt: |
-  Analyze these core concepts and suggest 10-15 geographic contexts that would create
-  meaningful variations for synthetic data generation:
+  Analyze these core concepts and identify the most relevant geographic contexts that directly relate to these specific concepts:
   
   **Core Concepts:** {core_concepts}
   
-  For each geographic context, consider:
-  - Regional regulations or legal requirements
-  - Local business practices and customs
-  - Economic conditions and market differences
-  - Cultural norms specific to that region
-  - Environmental or climate considerations
-  - Language or communication differences
+  IMPORTANT: Your geographic contexts must be directly relevant to these specific concepts. Do not provide generic global regions.
   
-  Provide geographically diverse suggestions from different continents and economic regions.
+  For EACH concept, identify:
+  1. Which specific countries/regions are most relevant to this concept
+  2. Where this topic has particular significance or unique characteristics
+  3. Locations with specialized regulations, practices, or cultural relevance to these concepts
   
-  Format as JSON array:
+  Focus on geographic relevance over diversity. If the concepts relate to specific regions, prioritize those regions and their variations.
+  
+  Return ONLY a JSON array of strings with 10-15 geographic contexts:
   ```json
   [
-    {{
-      "geographic_context": "Region/Country name",
-      "description": "Key characteristics relevant to the concepts",
-      "relevance": "high|medium|low",
-      "regulatory_notes": "Key regulations or legal considerations"
-    }}
+    "Geographic location 1",
+    "Geographic location 2", 
+    "Geographic location 3"
   ]
   ```
 
-fallback_suggestions:
-  - "United States"
-  - "European Union"
-  - "United Kingdom"
-  - "Canada"
-  - "Australia"
-  - "Japan"
-  - "South Korea" 
-  - "Singapore"
-  - "Brazil"
-  - "Mexico"
-  - "India"
-  - "China"
-  - "Southeast Asia"
-  - "Middle East"
-  - "Nordic Countries"

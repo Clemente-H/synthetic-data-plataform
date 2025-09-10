@@ -5,38 +5,11 @@ system_prompt: |
   You have deep knowledge of global cultures and can suggest culturally-specific variations.
 
 user_prompt: |
-  Analyze these core concepts and suggest 10-15 cultural contexts:
+  Based on these concepts: {core_concepts}
   
-  **Core Concepts:** {core_concepts}
-  **Geographic Context:** {geographic_context}
+  Generate 10-15 specific cultural contexts directly related to these concepts.
   
-  For each concept, identify:
-  - Cultural references and expressions
-  - Social customs and norms
-  - Idiomatic expressions or phrases
-  - Cultural values that might influence the context
-  - Generational or demographic cultural aspects
+  Respond with ONLY a valid JSON array of strings. No explanation, no markdown formatting.
   
-  Provide culturally diverse suggestions that would create meaningful variations in data generation.
-  
-  Format as JSON array:
-  ```json
-  [
-    {
-      "cultural_context": "...",
-      "description": "Brief explanation",
-      "relevance": "high|medium|low",
-      "examples": ["expression1", "expression2"]
-    }
-  ]
-  ```
-
-fallback_suggestions:
-  - "Traditional values"
-  - "Modern urban lifestyle"
-  - "Family-oriented culture"
-  - "Individual-focused society"
-  - "Collectivist community"
-  - "Religious influences"
-  - "Secular worldview"
-  - "Generational differences"
+  Example format:
+  ["Cultural context 1", "Cultural context 2", "Cultural context 3"]

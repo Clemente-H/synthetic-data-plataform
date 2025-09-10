@@ -12,46 +12,27 @@ system_prompt: |
   - Edge cases and specialized scenarios
 
 user_prompt: |
-  Analyze these core concepts and suggest 10-15 domain contexts that would create
-  meaningful technical and industry variations for synthetic data generation:
+  Analyze these core concepts and identify domain contexts that are directly relevant to these specific topics:
   
   **Core Concepts:** {core_concepts}
   **Additional Context:** {geographic_context}
   
-  For each domain context, consider:
-  - Technical complexity and depth level
-  - Industry-specific terminology and standards
-  - Regulatory and compliance considerations
-  - Professional methodologies and frameworks
-  - Specialized knowledge requirements
+  IMPORTANT: Your domain contexts must be specifically relevant to these concepts. Do not provide generic technical domains.
   
-  Provide diverse domain suggestions that cover different technical depths and industry contexts.
+  For EACH concept, identify specific domain aspects:
+  - Technical fields, industries, or specialized domains directly related to these concepts
+  - Academic disciplines or research areas specifically studying these topics
+  - Professional sectors or organizations working with these concepts
+  - Regulatory frameworks or standards specifically governing these topics
+  - Methodologies or practices specifically designed for these concepts
   
-  Format as JSON array:
+  Focus on domain relevance over breadth. If the concepts relate to specific fields or industries, prioritize those domains and their variations.
+  
+  Return ONLY a JSON array of strings with 10-15 domain contexts:
   ```json
   [
-    {{
-      "domain_context": "Domain/technical context name",
-      "description": "Brief explanation",
-      "complexity_level": "basic|intermediate|advanced",
-      "industry_focus": "Relevant industry or technical area"
-    }}
+    "Domain context 1",
+    "Domain context 2",
+    "Domain context 3"
   ]
   ```
-
-fallback_suggestions:
-  - "Technical Documentation"
-  - "Best Practices"
-  - "Industry Standards"
-  - "Compliance Requirements"
-  - "Quality Assurance"
-  - "Risk Management"
-  - "Process Improvement"
-  - "Technical Training"
-  - "Implementation Guidelines"
-  - "Performance Metrics"
-  - "Security Considerations"
-  - "Regulatory Framework"
-  - "Professional Development"
-  - "Technical Support"
-  - "Innovation and R&D"

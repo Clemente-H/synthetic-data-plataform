@@ -14,6 +14,8 @@ from api.extraction import router as extraction_router
 from api.characterization import router as characterization_router
 from api.generation import router as generation_router
 from api.validation import router as validation_router
+from api.websocket import router as websocket_router
+from api.pipeline_websocket import router as pipeline_websocket_router
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -84,6 +86,8 @@ app.include_router(extraction_router, prefix="/api/extraction", tags=["extractio
 app.include_router(characterization_router, prefix="/api/characterization", tags=["characterization"]) 
 app.include_router(generation_router, prefix="/api/generation", tags=["generation"])
 app.include_router(validation_router, prefix="/api/validation", tags=["validation"])
+app.include_router(websocket_router, prefix="/api", tags=["websocket"])
+app.include_router(pipeline_websocket_router, prefix="/api/pipeline", tags=["pipeline-websocket"])
 
 if __name__ == "__main__":
     import uvicorn
