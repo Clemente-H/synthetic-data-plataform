@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --job-name=synthetic-data-dev
-#SBATCH --output=dev_session.log
-#SBATCH --error=dev_session.err
+#SBATCH --output=sbatch_orchestrator.log
+#SBATCH --error=sbatch_orchestrator.err
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
@@ -14,50 +14,47 @@
 # Este es un script de sbatch. Se envía a la cola de SLURM con:
 #   sbatch scripts/start_dev_job.sbatch
 #
-# Para ver la salida de los servicios en tiempo real, usa:
-#   tail -f dev_session.log
+# Ahora se crearán 3 logs separados: ollama.log, backend.log, frontend.log
+# Para ver la salida de un servicio en tiempo real, usa por ejemplo:
+#   tail -f backend.log
 #
 # Para detener todos los servicios, cancela el trabajo con:
 #   scancel <JOBID>
-# (Obtén el JOBID con 'squeue -u tu_usuario')
 # -------------------
 
 
 echo "================================================="
-echo "Iniciando el entorno de desarrollo..."
+echo "Iniciando el entorno de desarrollo con logs separados..."
 echo "Job ID: $SLURM_JOB_ID"
 echo "Nodo: $SLURM_NODELIST"
-echo "Salida de logs en: $(pwd)/dev_session.log"
+echo "Logs de cada servicio en: $(pwd)/"
 echo "================================================="
 
 # Obtener la ruta absoluta del directorio raíz del proyecto.
-# Esto es importante porque sbatch no siempre se ejecuta desde donde lo llamas.
 PROJECT_ROOT=$(pwd)
 
-# Cargar cualquier módulo o entorno necesario (descomenta si es necesario)
-# echo "Cargando entorno micromamba..."
-# source /path/to/your/micromamba/etc/profile.d/micromamba.sh
-# micromamba activate your_env_name
+# Limpiar logs antiguos antes de empezar
+rm -f ollama.log backend.log frontend.log
 
-# Iniciar los 3 servicios en segundo plano.
-# Toda la salida (stdout y stderr) irá al archivo dev_session.log
+# Iniciar los 3 servicios en segundo plano, cada uno con su propio log.
+# El '2>&1' redirige tanto el output estándar como los errores al mismo archivo.
 
-echo "-> Lanzando Ollama serve..."
-ollama serve & 
+echo "-> Lanzando Ollama serve (logs en ollama.log)..."
+ollama serve > ollama.log 2>&1 &
 sleep 5 # Espera para que Ollama se inicie
 
-echo "-> Lanzando Backend..."
-python ${PROJECT_ROOT}/backend/main.py & 
+echo "-> Lanzando Backend (logs en backend.log)..."
+python ${PROJECT_ROOT}/backend/main.py > backend.log 2>&1 &
 
-echo "-> Lanzando Frontend..."
-npm --prefix ${PROJECT_ROOT}/frontend run dev & 
+echo "-> Lanzando Frontend (logs en frontend.log)..."
+npm --prefix ${PROJECT_ROOT}/frontend run dev > frontend.log 2>&1 &
 
 
 echo ""
 echo "Servicios iniciados en segundo plano."
-echo "Monitorea la salida con: tail -f dev_session.log"
+echo "Monitorea los logs con: tail -f <nombre_del_log>"
+echo "Te recomiendo empezar con: tail -f backend.log"
 echo "El trabajo se mantendrá corriendo hasta que sea cancelado o se acabe el tiempo."
 
 # Este truco mantiene el trabajo de sbatch vivo indefinidamente.
-# El trabajo terminará cuando lo canceles con 'scancel' o cuando se cumpla el TIME_LIMIT.
 sleep infinity
