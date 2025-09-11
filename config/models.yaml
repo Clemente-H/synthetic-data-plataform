@@ -1,29 +1,28 @@
 # Model Configuration for Ollama
-# Switch between llama3.2-8b and llama3.2-3b easily
+# Switch between gpt-oss:120b and gpt-oss:20b easily
 
-default_model: "llama3.2:3b"  # Change to 8b for more power
+default_model: "gpt-oss:120b"  # Use 20b if you want lighter load
 ollama_url: "http://localhost:11434"
 temperature: 0.7
-max_tokens: 2048
+max_tokens: 8192   # up to ~8k tokens per reply (safe on 1× H100)
 
 # Specialized models for different tasks
 models:
   concept_extraction:
-    model: "llama3.2:3b"
+    model: "gpt-oss:20b"       # lighter + faster for quick tasks
     temperature: 0.3
-    max_tokens: 1024
+    max_tokens: 4096
   
   characterization:
-    model: "llama3.2:3b"  # Can use 8b for better quality
+    model: "gpt-oss:120b"      # heavier, better quality
     temperature: 0.5
-    max_tokens: 1500
+    max_tokens: 6000
   
   generation:
-    model: "llama3.2:8b"  # Use larger model for generation
+    model: "gpt-oss:120b"
     temperature: 0.7
-    max_tokens: 3000
+    max_tokens: 8192   # long creative outputs
 
 # Backup models if primary unavailable
 fallback_models:
-  - "llama3.2:1b"
-  - "llama3.1:8b"
+  - "gpt-oss:20b"
