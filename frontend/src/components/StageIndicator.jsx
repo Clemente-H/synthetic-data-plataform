@@ -34,6 +34,25 @@ const StageIndicator = ({
     return stages[stage] || stage?.replace(/_/g, ' ')
   }
 
+  const getProgressDisplay = () => {
+    // If we're at 100% but still processing, show transition message
+    if (isProcessing && overallProgress >= 0.99) {
+      if (currentStage === 'concept_extraction') {
+        return 'Preparing agents...'
+      }
+      if (currentStage === 'characterization') {
+        return 'Starting characterization...'
+      }
+      if (currentStage?.startsWith('agent_')) {
+        return 'Loading next agent...'
+      }
+      return 'Moving to next phase...'
+    }
+    
+    // Normal progress percentage
+    return `${Math.round((overallProgress || 0) * 100)}%`
+  }
+
   const getConnectionStatus = () => {
     if (error) return { color: 'bg-red-500', text: 'Error' }
     if (!isConnected) return { color: 'bg-yellow-500', text: 'Connecting' }
@@ -59,7 +78,7 @@ const StageIndicator = ({
               <div className={`w-3 h-3 rounded-full ${status.color} ${isProcessing ? 'animate-pulse' : ''}`}></div>
               <div>
                 <div className="text-sm font-semibold text-gray-800">
-                  {isProcessing ? `${Math.round((overallProgress || 0) * 100)}%` : status.text}
+                  {isProcessing ? getProgressDisplay() : status.text}
                 </div>
                 {isProcessing && progressMessage && (
                   <div className="text-xs text-gray-600 truncate max-w-32">
@@ -145,7 +164,7 @@ const StageIndicator = ({
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium text-gray-700">Overall Progress</span>
                       <span className="font-bold text-gray-900">
-                        {Math.round((overallProgress || 0) * 100)}%
+                        {getProgressDisplay()}
                       </span>
                     </div>
                     <div className="bg-gray-200 rounded-full h-3 overflow-hidden">

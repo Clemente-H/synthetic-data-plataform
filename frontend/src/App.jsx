@@ -138,7 +138,7 @@ function App() {
       <div className="max-w-5xl mx-auto px-6 py-10">
         <div className="space-y-10">
           {/* Input Section - Show until we have concepts */}
-          {currentStep <= 2 && (
+          {currentStep <= 2 && concepts.length === 0 && (
             <InputSection
               onTextSubmit={handleTextSubmit}
               isProcessing={isProcessing}
