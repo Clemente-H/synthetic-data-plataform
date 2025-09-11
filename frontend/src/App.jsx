@@ -122,21 +122,21 @@ function App() {
   }, [finalResults, generatedSamples])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-gray-900 text-center">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <h1 className="text-4xl font-bold text-gray-900 text-center">
             Synthetic Data Generator
           </h1>
-          <p className="text-gray-600 text-center mt-2">
+          <p className="text-lg text-gray-600 text-center mt-3">
             Generate high-quality training datasets through intelligent concept characterization
           </p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="space-y-8">
+      <div className="max-w-5xl mx-auto px-6 py-10">
+        <div className="space-y-10">
           {/* Input Section - Show until we have concepts */}
           {currentStep <= 2 && (
             <InputSection
@@ -161,12 +161,12 @@ function App() {
                 {editableConcepts.map((concept, index) => (
                   <div
                     key={index}
-                    className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium border border-green-200 group flex items-center"
+                    className="px-5 py-3 bg-gradient-to-r from-green-50 to-green-100 text-green-800 rounded-2xl text-sm font-semibold border-2 border-green-200 group flex items-center hover:from-green-100 hover:to-green-200 transition-all hover:shadow-md transform hover:-translate-y-1"
                   >
                     {concept}
                     <button
                       onClick={() => handleRemoveConcept(concept)}
-                      className="ml-2 text-green-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="ml-3 text-green-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all w-5 h-5 rounded-full hover:bg-red-100 flex items-center justify-center"
                     >
                       ×
                     </button>
@@ -209,7 +209,7 @@ function App() {
                     {Array.isArray(characterization.geographic) ? characterization.geographic.map((context, index) => (
                       <div
                         key={index}
-                        className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200 hover:bg-blue-100 transition-colors group flex items-center justify-between"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-xl text-sm border-2 border-blue-200 hover:from-blue-100 hover:to-blue-200 transition-all group flex items-center justify-between hover:shadow-sm"
                       >
                         <span>{context}</span>
                         <button
@@ -239,7 +239,7 @@ function App() {
                     {Array.isArray(characterization.linguistic) ? characterization.linguistic.map((context, index) => (
                       <div
                         key={index}
-                        className="px-3 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm border border-purple-200 hover:bg-purple-100 transition-colors group flex items-center justify-between"
+                        className="px-4 py-2 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 rounded-xl text-sm border-2 border-purple-200 hover:from-purple-100 hover:to-purple-200 transition-all group flex items-center justify-between hover:shadow-sm"
                       >
                         <span>{context}</span>
                         <button
@@ -269,7 +269,7 @@ function App() {
                     {Array.isArray(characterization.cultural) ? characterization.cultural.map((context, index) => (
                       <div
                         key={index}
-                        className="px-3 py-2 bg-orange-50 text-orange-700 rounded-lg text-sm border border-orange-200 hover:bg-orange-100 transition-colors group flex items-center justify-between"
+                        className="px-4 py-2 bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 rounded-xl text-sm border-2 border-orange-200 hover:from-orange-100 hover:to-orange-200 transition-all group flex items-center justify-between hover:shadow-sm"
                       >
                         <span>{context}</span>
                         <button
@@ -299,7 +299,7 @@ function App() {
                     {Array.isArray(characterization.persona) ? characterization.persona.map((context, index) => (
                       <div
                         key={index}
-                        className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200 hover:bg-green-100 transition-colors group flex items-center justify-between"
+                        className="px-4 py-2 bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-xl text-sm border-2 border-green-200 hover:from-green-100 hover:to-green-200 transition-all group flex items-center justify-between hover:shadow-sm"
                       >
                         <span>{context}</span>
                         <button
@@ -329,7 +329,7 @@ function App() {
                     {Array.isArray(characterization.domain) ? characterization.domain.map((context, index) => (
                       <div
                         key={index}
-                        className="px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm border border-indigo-200 hover:bg-indigo-100 transition-colors group flex items-center justify-between"
+                        className="px-4 py-2 bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 rounded-xl text-sm border-2 border-indigo-200 hover:from-indigo-100 hover:to-indigo-200 transition-all group flex items-center justify-between hover:shadow-sm"
                       >
                         <span>{context}</span>
                         <button
@@ -352,23 +352,23 @@ function App() {
               <div className="text-xl font-semibold text-gray-800 mb-6">
                 Add More Concepts
               </div>
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="text-sm font-medium text-gray-700 mb-3">
+              <div className="mb-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200">
+                <div className="text-sm font-medium text-gray-700 mb-4">
                   Add additional concepts (comma-separated):
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <input
                     type="text"
                     value={newConceptText}
                     onChange={(e) => setNewConceptText(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddConcepts()}
                     placeholder="concept1, concept2, concept3"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
                   />
                   <button
                     onClick={handleAddConcepts}
                     disabled={!newConceptText.trim()}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                    className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all disabled:from-gray-400 disabled:to-gray-500 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                   >
                     Add
                   </button>
@@ -381,16 +381,16 @@ function App() {
                   <div className="text-sm font-medium text-gray-700 mb-2">
                     Added Concepts:
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-3">
                     {editableConcepts.slice(concepts.length).map((concept, index) => (
                       <div
                         key={index}
-                        className="px-3 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm border border-blue-200 group flex items-center"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 rounded-xl text-sm border-2 border-blue-200 group flex items-center hover:from-blue-100 hover:to-blue-200 transition-all hover:shadow-md transform hover:-translate-y-1"
                       >
                         {concept}
                         <button
                           onClick={() => handleRemoveConcept(concept)}
-                          className="ml-2 text-blue-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="ml-3 text-blue-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all w-5 h-5 rounded-full hover:bg-red-100 flex items-center justify-center"
                         >
                           ×
                         </button>
@@ -407,10 +407,13 @@ function App() {
             <div className="text-center slide-up">
               <button
                 onClick={() => setShowGenerationModal(true)}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-12 py-5 rounded-2xl hover:from-green-700 hover:to-green-800 transition-all font-bold text-xl shadow-xl hover:shadow-2xl transform hover:-translate-y-2 hover:scale-105"
               >
-                Ready to Generate Dataset
+                Generate Dataset
               </button>
+              <p className="text-gray-500 text-sm mt-3">
+                Ready to create your synthetic dataset
+              </p>
             </div>
           )}
 

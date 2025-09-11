@@ -1,15 +1,15 @@
-# 🚀 Deployment Guide - Synthetic Data Platform
+# Deployment Guide - Synthetic Data Platform
 
-## 📋 Pre-requisitos del Servidor
+## Server Prerequisites
 
-### Sistema Operativo
+### Operating System
 - Ubuntu 20.04+ / CentOS 8+ / macOS
 - Python 3.8+
 - Node.js 16+
-- 8GB RAM mínimo (16GB recomendado para llama3.2:8b)
-- 20GB espacio libre (para models + datasets)
+- 8GB RAM minimum (16GB recommended for llama3.2:8b)
+- 20GB free space (for models + datasets)
 
-### Dependencias del Sistema
+### System Dependencies
 ```bash
 # Ubuntu/Debian
 sudo apt update
@@ -22,48 +22,48 @@ sudo yum install -y python3-pip nodejs npm git curl
 brew install python node git curl
 ```
 
-## 🔧 Setup de Ollama
+## Ollama Setup
 
-### Instalación
+### Installation
 ```bash
 # Linux/macOS
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Verificar instalación
+# Verify installation
 ollama --version
 ```
 
-### Modelos Requeridos
+### Required Models
 ```bash
-# Modelo base (3B - más rápido)
+# Base model (3B - faster)
 ollama pull llama3.2:3b
 
-# Modelo avanzado (8B - mejor calidad) - OPCIONAL
+# Advanced model (8B - better quality) - OPTIONAL
 ollama pull llama3.2:8b
 
-# Verificar modelos instalados
+# Verify installed models
 ollama list
 ```
 
-### Configuración de Servicio
+### Service Configuration
 ```bash
-# Iniciar Ollama como servicio (Linux)
+# Start Ollama as service (Linux)
 sudo systemctl enable ollama
 sudo systemctl start ollama
 
-# Verificar que está corriendo en puerto 11434
+# Verify it's running on port 11434
 curl http://localhost:11434/api/version
 ```
 
-## 📦 Setup del Proyecto
+## Project Setup
 
-### 1. Clone y Preparación
+### 1. Clone and Preparation
 ```bash
-# Clone del repositorio
+# Repository clone
 git clone [YOUR_REPO_URL] synthetic-data-platform
 cd synthetic-data-platform
 
-# Crear estructura de directorios si falta
+# Create directory structure if missing
 mkdir -p logs temp_uploads
 ```
 
@@ -78,7 +78,7 @@ source venv/bin/activate
 # Instalar dependencias
 pip install -r requirements.txt
 
-# Verificar configuración
+# Verify configuration
 python -c "import yaml; print('YAML OK')"
 python -c "import httpx; print('HTTPX OK')"
 ```
@@ -90,18 +90,18 @@ cd ../frontend
 # Instalar dependencias
 npm install
 
-# Build para producción
+# Production build
 npm run build
 
-# Verificar build
+# Verify build
 ls -la dist/
 ```
 
-## ⚙️ Configuración de Producción
+## Production Configuration
 
-### 1. Variables de Entorno
+### 1. Environment Variables
 ```bash
-# Crear archivo de configuración
+# Create configuration file
 cat > backend/.env << EOF
 # Ollama Configuration
 OLLAMA_URL=http://localhost:11434
@@ -126,9 +126,9 @@ LOG_FILE=./logs/app.log
 EOF
 ```
 
-### 2. Configuración de Modelos (config/models.yaml)
+### 2. Model Configuration (config/models.yaml)
 ```yaml
-# Configuración optimizada para servidor
+# Server-optimized configuration
 default_model: "llama3.2:3b"
 ollama_url: "http://localhost:11434"
 temperature: 0.7
@@ -142,50 +142,50 @@ models:
     max_tokens: 1024
   
   characterization:
-    model: "llama3.2:3b"  # Usar 8b si tienes RAM suficiente
+    model: "llama3.2:3b"  # Use 8b if you have enough RAM
     temperature: 0.5
     max_tokens: 1024
   
   generation:
-    model: "llama3.2:8b"  # Cambiar a 3b si tienes problemas de memoria
+    model: "llama3.2:8b"  # Change to 3b if you have memory issues
     temperature: 0.7
     max_tokens: 2048
 ```
 
-## 🏃‍♂️ Ejecución
+## Execution
 
-### Modo Desarrollo (Testing)
+### Development Mode (Testing)
 ```bash
 # Terminal 1: Backend
 cd backend
 source venv/bin/activate
 python main.py
 
-# Terminal 2: Frontend (si necesitas development server)
+# Terminal 2: Frontend (if you need development server)
 cd frontend
 npm run dev
 ```
 
-### Modo Producción
+### Production Mode
 
-#### Opción 1: Directo
+#### Option 1: Direct
 ```bash
 # Backend con Uvicorn
 cd backend
 source venv/bin/activate
 uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
 
-# Servir frontend estático (con Python)
+# Serve static frontend (with Python)
 cd frontend
 python3 -m http.server 3000 --directory dist
 ```
 
-#### Opción 2: Con PM2 (Recomendado)
+#### Option 2: With PM2 (Recommended)
 ```bash
 # Instalar PM2
 npm install -g pm2
 
-# Crear configuración PM2
+# Create PM2 configuration
 cat > ecosystem.config.js << EOF
 module.exports = {
   apps: [
@@ -215,13 +215,13 @@ module.exports = {
 };
 EOF
 
-# Iniciar servicios
+# Start services
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 ```
 
-## 🌐 Configuración de Nginx (Opcional)
+## Nginx Configuration (Optional)
 
 ```nginx
 # /etc/nginx/sites-available/synthetic-data-platform
@@ -229,7 +229,7 @@ server {
     listen 80;
     server_name your-domain.com;
 
-    # Frontend estático
+    # Static frontend
     location / {
         proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
@@ -259,7 +259,7 @@ server {
 }
 ```
 
-## 🔍 Verificación y Testing
+## Verification and Testing
 
 ### Health Checks
 ```bash
@@ -278,16 +278,16 @@ curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
 curl http://localhost:3000
 ```
 
-### Test Completo del Pipeline
+### Complete Pipeline Test
 ```bash
 cd backend
 source venv/bin/activate
 python ../scripts/test_agents_sequential.py
 ```
 
-## 📊 Monitoreo
+## Monitoring
 
-### Logs Importantes
+### Important Logs
 ```bash
 # Backend logs
 tail -f backend/logs/app.log
@@ -300,48 +300,48 @@ pm2 logs synthetic-data-frontend
 journalctl -u ollama -f
 ```
 
-### Métricas del Sistema
+### System Metrics
 ```bash
-# Uso de memoria (importante para modelos LLM)
+# Memory usage (important for LLM models)
 free -h
 htop
 
-# Espacio en disco
+# Disk space
 df -h
 
 # Procesos Ollama
 ps aux | grep ollama
 ```
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
-### Problemas Comunes
+### Common Issues
 
 #### 1. "Connection refused" al conectar con Ollama
 ```bash
-# Verificar que Ollama está corriendo
+# Verify that Ollama is running
 systemctl status ollama
 ollama list
 
-# Reiniciar si es necesario
+# Restart if necessary
 sudo systemctl restart ollama
 ```
 
-#### 2. "Out of memory" durante generación
+#### 2. "Out of memory" during generation
 ```bash
-# Cambiar a modelo más pequeño en config/models.yaml
+# Change to smaller model in config/models.yaml
 default_model: "llama3.2:3b"
 
-# O reducir parámetros
+# Or reduce parameters
 max_tokens: 512
 ```
 
 #### 3. WebSocket connection errors
 ```bash
-# Verificar CORS origins en backend/.env
+# Verify CORS origins in backend/.env
 CORS_ORIGINS=http://localhost:3000,http://your-domain.com
 
-# Verificar firewall
+# Verify firewall
 sudo ufw allow 8000
 ```
 
@@ -351,30 +351,30 @@ sudo ufw allow 8000
 cd frontend
 npm run build
 
-# Verificar permisos
+# Verify permissions
 chmod -R 755 dist/
 ```
 
-## 🔐 Seguridad (Producción)
+## Security (Production)
 
-### Básicos
+### Basics
 - Cambiar puertos default
 - Configurar firewall (ufw/iptables)
 - Usar HTTPS con certificados SSL
 - Configurar rate limiting
 - Logs de seguridad
 
-### Archivo de configuración de seguridad
+### Security configuration file
 ```bash
-# Firewall básico
+# Basic firewall
 sudo ufw enable
 sudo ufw allow ssh
 sudo ufw allow 80
 sudo ufw allow 443
-sudo ufw deny 8000  # Solo acceso interno
-sudo ufw deny 11434  # Solo acceso interno
+sudo ufw deny 8000  # Internal access only
+sudo ufw deny 11434  # Internal access only
 ```
 
 ---
 
-**🎯 Con esta configuración tendrás la plataforma corriendo en modo producción, lista para generar datasets de 50K+ samples!**
+**With this configuration you'll have the platform running in production mode, ready to generate 50K+ sample datasets!**

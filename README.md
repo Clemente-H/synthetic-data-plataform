@@ -1,12 +1,12 @@
-# 🧠 Synthetic Data Platform
+# Synthetic Data Platform
 
 **AI-powered combinatorial synthetic data generation with specialized agents**
 
-Una plataforma completa para generar datasets sintéticos de alta calidad usando múltiples agentes de AI especializados y paralelización GPU avanzada.
+A complete platform for generating high-quality synthetic datasets using multiple specialized AI agents and advanced GPU parallelization.
 
-## 🚀 Características Principales
+## Key Features
 
-### ⚡ **Pipeline de 8 Etapas**
+### **8-Stage Pipeline**
 1. **Input Processing** - Procesamiento y validación de entrada
 2. **Concept Extraction** - Extracción de 20-50 conceptos clave
 3. **Multi-Dimensional Characterization** - 5 agentes especializados
@@ -16,32 +16,32 @@ Una plataforma completa para generar datasets sintéticos de alta calidad usando
 7. **Quality Assurance** - Filtrado automático de calidad
 8. **Dataset Export** - Exportación automática en JSON, CSV, Parquet
 
-### 🤖 **5 Agentes Especializados (LLM Puro)**
+### **5 Specialized Agents (Pure LLM)**
 - **Geographic Agent** - Contextos geográficos y regionales
 - **Cultural Agent** - Matices culturales y sociales  
 - **Linguistic Agent** - Variaciones lingüísticas y dialectos
 - **Persona Agent** - Perfiles demográficos detallados
 - **Domain Agent** - Expertise específico del dominio
 
-### 🚀 **Paralelización GPU (H100 Ready)**
-- **Configurable**: 1-8 GPUs simultáneas (editable en `config/gpu_config.py`)
-- **Batch Processing**: Distribuye carga automáticamente
-- **Progress Real-time**: "Generating samples 117/125 (Batch 3/8)"
-- **Performance**: De 40 min → 10-12 min con 4 GPUs
+### **GPU Parallelization (H100 Ready)**
+- **Configurable**: 1-8 simultaneous GPUs (editable in `config/gpu_config.py`)
+- **Batch Processing**: Automatically distributes load
+- **Real-time Progress**: "Generating samples 117/125 (Batch 3/8)"
+- **Performance**: From 40 min → 10-12 min with 4 GPUs
 
-### 📊 **Export Multi-Formato Automático**
-- **JSON** - Siempre generado, ideal para APIs
-- **CSV** - Para visualización y análisis
-- **Parquet** - Para datasets grandes (>10 samples)
-- **Descarga directa** desde el frontend
-- **API de gestión** completa
+### **Automatic Multi-Format Export**
+- **JSON** - Always generated, ideal for APIs
+- **CSV** - For visualization and analysis
+- **Parquet** - For large datasets (>10 samples)
+- **Direct download** from frontend
+- **Complete management API**
 
-### 🎯 **Completamente General**
-- ✅ **Gaming toxicity** (League of Legends)
-- ✅ **Healthcare AI** (diagnosis platforms)  
-- ✅ **Cualquier dominio** - La plataforma es agnóstica al contenido
+### **Completely General**
+- Gaming toxicity (League of Legends)
+- Healthcare AI (diagnosis platforms)  
+- Any domain - The platform is content-agnostic
 
-## 🏗️ Architecture
+## Architecture
 
 ### Backend (Python + FastAPI + WebSocket)
 ```
@@ -95,79 +95,79 @@ frontend/src/
       animations.css         # Breathing/pulsing animations
 ```
 
-## ✅ Current Implementation Status
+## Current Implementation Status
 
-### ✅ **Phase 1: Backend Core (COMPLETED)**
+### **Phase 1: Backend Core (COMPLETED)**
 
-**✅ Specialized Agents:**
-- ✅ Concept Extractor - Extracts 20-50 concepts from input
-- ✅ Geographic Agent - Location contexts, regulations, regional variations
-- ✅ Cultural Agent - Cultural references, expressions + web scraping
-- ✅ Linguistic Agent - Language variations, communication styles  
-- ✅ Persona Agent - User archetypes, demographics, role perspectives
-- ✅ Domain Agent - Technical concepts, industry terminology
+**Specialized Agents:**
+- Concept Extractor - Extracts 20-50 concepts from input
+- Geographic Agent - Location contexts, regulations, regional variations
+- Cultural Agent - Cultural references, expressions + web scraping
+- Linguistic Agent - Language variations, communication styles  
+- Persona Agent - User archetypes, demographics, role perspectives
+- Domain Agent - Technical concepts, industry terminology
 
-**✅ Infrastructure:**
-- ✅ Ollama Client - Configurable models (llama3.2-3b/8b switching)
-- ✅ Prompt Loader - YAML-based prompt templates
-- ✅ Base Agent - Common functionality for all agents
-- ✅ Combinator - 50K+ sample combinatorial generation
+**Infrastructure:**
+- Ollama Client - Configurable models (llama3.2-3b/8b switching)
+- Prompt Loader - YAML-based prompt templates
+- Base Agent - Common functionality for all agents
+- Combinator - 50K+ sample combinatorial generation
 
-**✅ API Endpoints:**
-- ✅ Extraction API - `/api/extraction` (Steps 1-2)
-- ✅ Characterization API - `/api/characterization` (Step 3)
-- ✅ Validation API - `/api/validation` (Step 4)
-- ✅ Generation API - `/api/generation` (Steps 6-8)
-- ✅ WebSocket API - Real-time pipeline updates
+**API Endpoints:**
+- Extraction API - `/api/extraction` (Steps 1-2)
+- Characterization API - `/api/characterization` (Step 3)
+- Validation API - `/api/validation` (Step 4)
+- Generation API - `/api/generation` (Steps 6-8)
+- WebSocket API - Real-time pipeline updates
 
-**✅ Pipeline:**
-- ✅ Pipeline Orchestrator - Complete 8-step workflow
-- ✅ Sequential Agent Testing - System validation script
+**Pipeline:**
+- Pipeline Orchestrator - Complete 8-step workflow
+- Sequential Agent Testing - System validation script
 
-### ✅ **Phase 2: Frontend Implementation (COMPLETED)**
+### **Phase 2: Frontend Implementation (COMPLETED)**
 
-**✅ Core Components:**
-- ✅ InputSection - Document upload with file type detection
-- ✅ ConceptContainer - Core concepts display with manual editing
-- ✅ GenerationModal - Format selection + samples per category configuration
-- ✅ StageIndicator - Minimalist progress indicator (bottom-right)
+**Core Components:**
+- InputSection - Document upload with file type detection
+- ConceptContainer - Core concepts display with manual editing
+- GenerationModal - Format selection + samples per category configuration
+- StageIndicator - Minimalist progress indicator (bottom-right)
 
-**✅ Real-time Features:**
-- ✅ WebSocket Integration - Real-time pipeline progress updates
-- ✅ Progressive Disclosure - Input → Core Concepts → Dimensions → Generate
-- ✅ Auto-advance Flow - Concepts automatically proceed to characterization
-- ✅ Manual Concept Addition - Add/remove concepts via comma-separated input
+**Real-time Features:**
+- WebSocket Integration - Real-time pipeline progress updates
+- Progressive Disclosure - Input → Core Concepts → Dimensions → Generate
+- Auto-advance Flow - Concepts automatically proceed to characterization
+- Manual Concept Addition - Add/remove concepts via comma-separated input
 
-**✅ UI/UX:**
-- ✅ Single Column Layout - Centered layout following HTML dummy design
-- ✅ Breathing Animations - Visual feedback during processing
-- ✅ 5 Dimension Grid - Geographic, Linguistic, Cultural, Persona, Domain
-- ✅ Clean Design - Professional green/grey theme without emojis
+**UI/UX:**
+- Single Column Layout - Centered layout following HTML dummy design
+- Breathing Animations - Visual feedback during processing
+- 5 Dimension Grid - Geographic, Linguistic, Cultural, Persona, Domain
+- Clean Design - Professional green/grey theme without emojis
 
-**✅ State Management:**
-- ✅ usePipelineWebSocket - Complete pipeline state management
-- ✅ useWebSocket - Core WebSocket connection handling
-- ✅ Real-time Updates - Progress tracking and error handling
+**State Management:**
+- usePipelineWebSocket - Complete pipeline state management
+- useWebSocket - Core WebSocket connection handling
+- Real-time Updates - Progress tracking and error handling
 
-### 🔄 **Phase 3: Integration & Testing (IN PROGRESS)**
+### **Phase 3: Integration & Testing (IN PROGRESS)**
 
-- ✅ Frontend-Backend WebSocket Integration
-- ✅ Real-time Pipeline Progress Updates
-- ✅ Concept Extraction → Characterization Flow
-- 🔄 Generation Modal Integration (needs refinement)
-- ⏳ End-to-End Pipeline Testing
-- ⏳ Error Handling & Edge Cases
-- ⏳ Performance Optimization
+- Frontend-Backend WebSocket Integration
+- Real-time Pipeline Progress Updates
+- Concept Extraction → Characterization Flow
+- Generation Modal Integration (needs refinement)
+- End-to-End Pipeline Testing
+- Error Handling & Edge Cases
+- Performance Optimization
 
-### ⏳ **Phase 4: Production Features (PENDING)**
+### **Phase 4: Production Features (PENDING)**
 
-- ⏳ BERT-based Quality Assurance Models
-- ⏳ Advanced Web Scraping for Cultural Agent
-- ⏳ Template System Extensions
-- ⏳ Batch Processing Optimizations
-- ⏳ Export Format Extensions
+- BERT-based Quality Assurance Models
+- Advanced Web Scraping for Cultural Agent
+- Template System Extensions
+- Batch Processing Optimizations
+- Export Format Extensions
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 - Python 3.8+
@@ -195,7 +195,7 @@ cd scripts
 python test_agents_sequential.py
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Model Configuration (`config/models.yaml`)
 ```yaml
@@ -218,7 +218,7 @@ All prompts are centralized in YAML files under `prompts/`:
 - **Agents**: `prompts/characterization/{agent_name}.yaml`
 - **Generation**: `prompts/generation/{format}_format.yaml`
 
-## 🔄 Pipeline Flow
+## Pipeline Flow
 
 ```mermaid
 graph TD
@@ -235,14 +235,14 @@ graph TD
     K --> L[HuggingFace Export<br/>JSON/JSONL]
 ```
 
-## 📋 Supported Output Formats
+## Supported Output Formats
 
 - **DPO**: Direct Preference Optimization pairs (instruction, chosen, rejected)
 - **SFT**: Supervised Fine-Tuning pairs (instruction, response)
 - **Q&A**: Question-Answer pairs with metadata
 - **Raw**: Unstructured text samples
 
-## 🧪 Testing
+## Testing
 
 ### Sequential Agent Test
 ```bash
@@ -258,7 +258,7 @@ Tests each agent individually without overwhelming the system:
 - ✅ Persona suggestions (user archetypes)
 - ✅ Domain suggestions (technical contexts)
 
-## 📈 Scale Capabilities
+## Scale Capabilities
 
 - **Concept Combinations**: Up to 50,000 combinations
 - **Sample Generation**: 50K+ samples per session
@@ -267,7 +267,7 @@ Tests each agent individually without overwhelming the system:
   - Large scale: Background async with progress tracking
 - **Memory Efficient**: Batch processing for massive datasets
 
-## 🎨 Design System
+## Design System
 
 **Colors**: Green/grey professional theme with minimal additional colors
 **Animations**: Breathing/pulsing animations for loading states
@@ -277,7 +277,7 @@ Tests each agent individually without overwhelming the system:
 - Dimensions: 5-column responsive grid
 - Progressive disclosure pattern
 
-## 🛣️ Deployment
+## Deployment
 
 ### Development
 ```bash
@@ -294,22 +294,22 @@ cd frontend && npm run dev
 - WebSocket: Production-ready connection handling
 - Models: Ollama server with llama3.2 models
 
-## 🛣️ **Roadmap & Funcionalidades Futuras**
+## **Roadmap & Future Features**
 
-### ✅ **Completado (OpenAI Hackathon 2024)**
-- ✅ **Pipeline completo** de 8 etapas funcional
-- ✅ **5 agentes especializados** con LLM puro (sin hardcoding)
-- ✅ **Paralelización GPU** configurable (1-8 H100s)
-- ✅ **WebSocket real-time** con progress detallado
-- ✅ **Export automático** en JSON/CSV/Parquet
-- ✅ **Frontend completo** con descarga integrada
-- ✅ **Sistema general** - Funciona para cualquier dominio
+### **Completed (OpenAI Hackathon 2024)**
+- **Complete 8-stage pipeline** functional
+- **5 specialized agents** with pure LLM (no hardcoding)
+- **Configurable GPU parallelization** (1-8 H100s)
+- **Real-time WebSocket** with detailed progress
+- **Automatic export** in JSON/CSV/Parquet
+- **Complete frontend** with integrated download
+- **General system** - Works for any domain
 
-### 🚀 **Próximas Características (Post-Hackathon)**
+### **Next Features (Post-Hackathon)**
 
-#### 🤗 **HuggingFace Integration Automática**
+#### **Automatic HuggingFace Integration**
 ```python
-# Planeado para v2.0
+# Planned for v2.0
 @app.post("/api/datasets/export-to-huggingface")
 async def export_to_huggingface(
     dataset_filename: str,
@@ -318,40 +318,40 @@ async def export_to_huggingface(
     dataset_description: str = None
 ):
     """
-    Export directo a HuggingFace Datasets desde la plataforma
-    - Upload automático con metadata
-    - Versionado inteligente
-    - README.md auto-generado
-    - Tags y categorías automáticas
+    Direct export to HuggingFace Datasets from the platform
+    - Automatic upload with metadata
+    - Intelligent versioning
+    - Auto-generated README.md
+    - Automatic tags and categories
     """
 ```
 
-#### 🔧 **Mejoras de Plataforma**
-- **Batch Processing** - Múltiples inputs simultáneos
-- **Template Custom** - Formatos de output personalizados  
-- **W&B Integration** - Tracking de experimentos
-- **Model Fine-tuning** - Integration con frameworks
-- **Advanced QA** - Modelos BERT para quality assurance
-- **Web Scraping** - Cultural agent con datos real-time
+#### **Platform Improvements**
+- **Batch Processing** - Multiple simultaneous inputs
+- **Custom Templates** - Personalized output formats  
+- **W&B Integration** - Experiment tracking
+- **Model Fine-tuning** - Framework integration
+- **Advanced QA** - BERT models for quality assurance
+- **Web Scraping** - Cultural agent with real-time data
 
-#### 💡 **Funcionalidades Avanzadas**
-- **Dataset Versioning** - Control de versiones automático
-- **Collaborative Editing** - Edición multi-usuario
-- **API Webhooks** - Notificaciones automáticas
-- **Cloud Deploy** - Deploy en AWS/GCP/Azure
-- **Enterprise SSO** - Autenticación empresarial
+#### **Advanced Features**
+- **Dataset Versioning** - Automatic version control
+- **Collaborative Editing** - Multi-user editing
+- **API Webhooks** - Automatic notifications
+- **Cloud Deploy** - Deploy on AWS/GCP/Azure
+- **Enterprise SSO** - Enterprise authentication
 
-### 🎯 **Vision a Largo Plazo**
-Convertir la plataforma en el **estándar de facto** para generación de datasets sintéticos, con:
-- **Marketplace de Agentes** - Agentes especializados por industria
-- **Plugin System** - Extensiones de terceros
-- **Enterprise Edition** - Funcionalidades para empresas grandes
-- **AI-powered QA** - Quality assurance completamente automatizada
+### **Long-term Vision**
+Make the platform the **de facto standard** for synthetic dataset generation, with:
+- **Agent Marketplace** - Industry-specialized agents
+- **Plugin System** - Third-party extensions
+- **Enterprise Edition** - Features for large enterprises
+- **AI-powered QA** - Fully automated quality assurance
 
-## 📄 License
+## License
 
 MIT License - Built for OpenAI Hackathon 2024
 
 ---
 
-**✅ Ready for real-time 50K+ sample generation with specialized AI agents! 🚀**
+**Ready for real-time 50K+ sample generation with specialized AI agents!**
