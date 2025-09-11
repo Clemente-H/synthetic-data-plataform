@@ -5,3 +5,6 @@ backend/generated_test_data/
 *.DS_STORE
 *.png
 *.txt
+backend/exports/
+*.log
+*.err
