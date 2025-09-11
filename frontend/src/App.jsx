@@ -193,7 +193,7 @@ function App() {
 
           {/* Dimensions Section - Show after characterization */}
           {Object.keys(characterization).length > 0 && currentStep >= 3 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Geographic Contexts */}
               {characterization.geographic && (
                 <div className={`bg-white rounded-2xl shadow-lg p-6 border slide-up ${isProcessing && currentStep === 3 ? 'breathing' : ''}`}>
