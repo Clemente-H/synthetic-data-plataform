@@ -5,7 +5,9 @@ const StageIndicator = ({
   overallProgress, 
   isProcessing, 
   isConnected, 
-  error 
+  error,
+  progressMessage,
+  progressData 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -32,6 +34,25 @@ const StageIndicator = ({
     return stages[stage] || stage?.replace(/_/g, ' ')
   }
 
+  const getProgressDisplay = () => {
+    // If we're at 100% but still processing, show transition message
+    if (isProcessing && overallProgress >= 0.99) {
+      if (currentStage === 'concept_extraction') {
+        return 'Preparing agents...'
+      }
+      if (currentStage === 'characterization') {
+        return 'Starting characterization...'
+      }
+      if (currentStage?.startsWith('agent_')) {
+        return 'Loading next agent...'
+      }
+      return 'Moving to next phase...'
+    }
+    
+    // Normal progress percentage
+    return `${Math.round((overallProgress || 0) * 100)}%`
+  }
+
   const getConnectionStatus = () => {
     if (error) return { color: 'bg-red-500', text: 'Error' }
     if (!isConnected) return { color: 'bg-yellow-500', text: 'Connecting' }
@@ -42,48 +63,115 @@ const StageIndicator = ({
   const status = getConnectionStatus()
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-6 right-6 z-50">
       <div 
-        className={`bg-white rounded-lg shadow-lg border transition-all duration-300 ${
-          isExpanded ? 'p-4 min-w-64' : 'p-3'
+        className={`bg-white rounded-xl shadow-2xl border-2 border-gray-100 transition-all duration-300 ${
+          isExpanded ? 'p-6 min-w-80' : 'p-4 min-w-48'
         }`}
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
       >
         {/* Compact View */}
         {!isExpanded && (
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${status.color} ${isProcessing ? 'animate-pulse' : ''}`}></div>
-            <span className="text-xs font-medium text-gray-700">
-              {isProcessing ? Math.round((overallProgress || 0) * 100) + '%' : status.text}
-            </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${status.color} ${isProcessing ? 'animate-pulse' : ''}`}></div>
+              <div>
+                <div className="text-sm font-semibold text-gray-800">
+                  {isProcessing ? getProgressDisplay() : status.text}
+                </div>
+                {isProcessing && progressMessage && (
+                  <div className="text-xs text-gray-600 truncate max-w-32">
+                    {progressMessage}
+                  </div>
+                )}
+              </div>
+            </div>
+            {isProcessing && (
+              <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 transition-all duration-500"
+                  style={{ width: `${Math.round((overallProgress || 0) * 100)}%` }}
+                ></div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Expanded View */}
         {isExpanded && (
-          <div className="space-y-2">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-900">Pipeline Status</span>
-              <div className={`w-2 h-2 rounded-full ${status.color} ${isProcessing ? 'animate-pulse' : ''}`}></div>
+              <span className="text-lg font-bold text-gray-900">Pipeline Status</span>
+              <div className={`w-4 h-4 rounded-full ${status.color} ${isProcessing ? 'animate-pulse' : ''} shadow-lg`}></div>
             </div>
             
             {isProcessing && (
               <>
-                <div className="text-xs text-gray-600">
-                  {getStageDisplay(currentStage)}
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-sm font-semibold text-gray-700 mb-1">
+                    Current Stage
+                  </div>
+                  <div className="text-base text-gray-900">
+                    {getStageDisplay(currentStage)}
+                  </div>
                 </div>
                 
+                {/* Progress message from backend */}
+                {progressMessage && (
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <div className="text-sm font-medium text-blue-800">
+                      {progressMessage}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Detailed progress for generation stage */}
+                {currentStage === 'generation' && progressData && (
+                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                    <div className="text-sm font-semibold text-green-800 mb-2">
+                      Generation Progress
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {progressData.combination_current && progressData.combination_total && (
+                        <div className="bg-white p-2 rounded">
+                          <div className="font-medium text-gray-600">Combinations</div>
+                          <div className="text-gray-900">
+                            {progressData.combination_current.toLocaleString()} / {progressData.combination_total.toLocaleString()}
+                          </div>
+                        </div>
+                      )}
+                      {progressData.samples_generated && (
+                        <div className="bg-white p-2 rounded">
+                          <div className="font-medium text-gray-600">Samples</div>
+                          <div className="text-gray-900">{progressData.samples_generated.toLocaleString()}</div>
+                        </div>
+                      )}
+                      {progressData.current_batch && progressData.total_batches && (
+                        <div className="bg-white p-2 rounded col-span-2">
+                          <div className="font-medium text-gray-600">GPU Batches</div>
+                          <div className="text-gray-900">
+                            {progressData.current_batch} / {progressData.total_batches} (Parallel Processing)
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 {overallProgress !== undefined && (
-                  <div className="space-y-1">
-                    <div className="bg-gray-200 rounded-full h-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-gray-700">Overall Progress</span>
+                      <span className="font-bold text-gray-900">
+                        {getProgressDisplay()}
+                      </span>
+                    </div>
+                    <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
                       <div 
-                        className="bg-primary-600 h-2 rounded-full transition-all duration-500"
+                        className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500 shadow-sm"
                         style={{ width: `${Math.round((overallProgress || 0) * 100)}%` }}
                       ></div>
-                    </div>
-                    <div className="text-xs text-gray-500 text-right">
-                      {Math.round((overallProgress || 0) * 100)}%
                     </div>
                   </div>
                 )}

@@ -21,8 +21,8 @@ export default {
         }
       },
       animation: {
-        'pulse-gentle': 'pulse 2s ease-in-out infinite',
-        'breathing': 'breathing 3s ease-in-out infinite',
+        'pulse-gentle': 'pulse 10s ease-in-out infinite',
+        'breathing': 'breathing 14s ease-in-out infinite',
       },
       keyframes: {
         breathing: {
